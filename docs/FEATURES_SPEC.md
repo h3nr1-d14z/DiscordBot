@@ -34,16 +34,7 @@
 - **Betting**: Optional coin wager
 - **Special**: Rock Paper Scissors Lizard Spock variant
 
-### 4. Hangman
-**Command**: `/hangman [category]`
-- **Categories**: Animals, Countries, Movies, Food, Tech
-- **Features**:
-  - Visual hangman display
-  - Hint system (costs coins)
-  - Letter frequency helper
-  - Custom word submissions
-
-### 5. Connect Four
+### 4. Connect Four
 **Command**: `/connect4 [@opponent]`
 - **Board**: 7x6 grid
 - **Interface**: Column selection via reactions
@@ -53,7 +44,7 @@
   - Draw detection
   - Replay last game
 
-### 6. Number Guessing
+### 5. Number Guessing
 **Command**: `/guess [max_number]`
 - **Ranges**: 1-10, 1-100, 1-1000
 - **Features**:
@@ -62,7 +53,7 @@
   - Hot/cold indicators
   - Speed bonus for quick guesses
 
-### 7. Word Chain
+### 6. Word Chain
 **Command**: `/wordchain [language]`
 - **Rules**: Next word must start with last letter
 - **Features**:
@@ -71,7 +62,7 @@
   - Theme modes (animals, cities)
   - Multiplayer support
 
-### 8. 2048
+### 7. 2048
 **Command**: `/2048`
 - **Controls**: Arrow reactions for movement
 - **Features**:

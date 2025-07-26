@@ -49,7 +49,6 @@ discord-bot/
 - **Rock Paper Scissors**: Classic game with stats tracking
 - **Word Chain**: Word association game
 - **Number Guessing**: Guess the number within range
-- **Hangman**: Classic word guessing game
 - **Connect Four**: Strategic board game
 - **2048**: Number sliding puzzle game
 

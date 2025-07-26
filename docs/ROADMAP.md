@@ -36,11 +36,6 @@ This roadmap outlines the planned features and improvements for the Discord Fun 
   - Streak tracking
   - Speed bonuses
 
-- [ ] **Hangman**
-  - Word categories
-  - Custom word lists per server
-  - Hint system
-
 ### 💰 Economy System
 - [ ] **Full Economy Implementation**
   - Balance checking and transfers
@@ -219,7 +214,7 @@ This section tracks features requested by the community:
 
 ### v1.2 (March 2025)
 - Leveling system
-- More games (RPS, Hangman)
+- More games (RPS)
 - Profile cards
 
 ### v1.3 (April 2025)

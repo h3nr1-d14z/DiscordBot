@@ -59,7 +59,6 @@ export enum GameType {
   TicTacToe = 'tictactoe',
   RockPaperScissors = 'rps',
   Trivia = 'trivia',
-  Hangman = 'hangman',
   ConnectFour = 'connect4',
   NumberGuess = 'numberguess',
   WordChain = 'wordchain',

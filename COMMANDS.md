@@ -1,6 +1,6 @@
 # Discord Fun Bot - Command Reference
 
-> 📝 This documentation is auto-generated. Last updated: 2025-07-26T09:58:32.760Z
+> 📝 This documentation is auto-generated. Last updated: 2025-07-26T11:20:32.417Z
 
 ## Table of Contents
 
@@ -191,6 +191,36 @@
 
 ### 🎮 Games Commands
 
+#### `/connect4`
+
+**Description:** Play Connect Four
+
+**Cooldown:** 10 seconds
+
+**Options:**
+
+- `opponent` *(optional)*: User to play against (leave empty to play against bot)
+
+**Usage:**
+```
+/connect4 (opponent)
+```
+
+---
+
+#### `/doom`
+
+**Description:** Play a text-based Doom-like dungeon crawler
+
+**Cooldown:** 5 seconds
+
+**Usage:**
+```
+/doom
+```
+
+---
+
 #### `/rps`
 
 **Description:** Play Rock Paper Scissors!
@@ -334,13 +364,13 @@
 
 ## Command Statistics
 
-**Total Commands:** 20
+**Total Commands:** 22
 
 **By Category:**
 
 - 🛠️ Utility: 2 commands
 - 🎵 Music: 10 commands
-- 🎮 Games: 3 commands
+- 🎮 Games: 5 commands
 - 🎉 Fun: 3 commands
 - 💰 Economy: 2 commands
 

@@ -1,136 +1,99 @@
-# Discord Fun Bot 🎮
+# Discord Fun Bot
 
-A feature-rich Discord bot packed with games, fun commands, economy system, and more!
+A feature-rich Discord bot with games, fun commands, and interactive features.
 
-## ✨ Features
+## Features
 
-- **🎵 Music Player**: Play YouTube music with queue, volume control, loop modes
-- **🎮 Games**: Tic-Tac-Toe, Rock Paper Scissors, Trivia, Number Guessing, and more
-- **🎉 Fun Commands**: 8ball, Jokes, Memes, Dice Roll, Fortune Cookie
-- **💰 Economy System**: Virtual currency, daily rewards, leaderboard
-- **📊 Leveling System**: XP-based progression with rewards
-- **🛠️ Utility Commands**: User info, server stats, help system
-- **📝 Auto Documentation**: Command docs regenerate automatically when you add new commands
+- 🎮 **Games**: Tic-Tac-Toe, Connect Four, DOOM (text-based), Trivia, and more
+- 🎉 **Fun Commands**: 8ball, jokes, memes, ASCII art
+- 💰 **Economy System**: Virtual currency, daily rewards, shop
+- 📊 **Leveling System**: XP and levels based on activity
+- 🎁 **Interactive**: Polls, giveaways, and more
 
-## 🚀 Quick Start
+## Setup
 
-### Local Development
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Discord Bot Token
+
+### Installation
+
+1. Clone the repository
+2. Copy `.env.example` to `.env` and fill in your bot token
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Development
 
 ```bash
-# Clone repository
-git clone https://github.com/yourusername/discord-fun-bot.git
-cd discord-fun-bot
-
-# Setup
-./setup.sh
-
-# Configure
-cp .env.example .env
-# Edit .env with your Discord bot token
-
-# Register commands
-npm run register
-
-# Run
 npm run dev
 ```
 
-### Production Deployment (Debian Linux)
+### Production
 
+#### Using PM2:
 ```bash
-# Quick deploy
-./deployment/install-debian.sh
-sudo su - discordbot
-cd /opt/discord-bot
-./deployment/deploy.sh
+npm run build
+npm run deploy
 ```
 
-📚 **Full deployment guide**: [deployment/DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
-
-## 📋 Commands
-
-See [COMMANDS.md](COMMANDS.md) for a complete, auto-generated list of all available commands.
-
-**Popular Commands:**
-| Command | Description | Category |
-|---------|-------------|----------|
-| `/play` | Play a song from YouTube | Music |
-| `/skip` | Skip the current song | Music |
-| `/queue` | Show the music queue | Music |
-| `/help` | Show all commands | Utility |
-| `/ping` | Check bot latency | Utility |
-| `/tictactoe` | Play Tic-Tac-Toe | Games |
-| `/8ball` | Ask the magic 8-ball | Fun |
-| `/joke` | Get a random joke | Fun |
-| `/roll` | Roll dice (D&D notation) | Fun |
-
-## 🛠️ Tech Stack
-
-- **Runtime**: Node.js 18+ with TypeScript
-- **Framework**: Discord.js v14
-- **Database**: SQLite
-- **Process Manager**: PM2
-- **Deployment**: Docker + Cloudflare Tunnel
-
-## 📁 Project Structure
-
-```
-discord-bot/
-├── src/              # Source code
-├── docs/             # Documentation
-├── deployment/       # Deployment scripts
-├── docker/           # Docker configs
-└── package.json      # Dependencies
-```
-
-## 🔧 Configuration
-
-Create `.env` file:
-
-```env
-DISCORD_TOKEN=your_bot_token
-CLIENT_ID=your_client_id
-GUILD_ID=test_guild_id  # Optional
-DATABASE_PATH=./data/bot.db
-ENABLE_ECONOMY=true
-ENABLE_LEVELING=true
-```
-
-## 🐳 Docker Support
-
+#### Using Docker:
 ```bash
-# Using Docker Compose
 docker-compose up -d
-
-# View logs
-docker-compose logs -f bot
 ```
 
-## 📈 Future Plans
+## Configuration
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for upcoming features and development plans.
+Edit `.env` file:
+- `DISCORD_TOKEN`: Your bot token from Discord Developer Portal
+- `CLIENT_ID`: Your application's client ID
+- `GUILD_ID`: Your test server ID (optional, for development)
 
-## 🤝 Contributing
+## Commands
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Utility
+- `/ping` - Check bot latency
+- `/help` - Show all commands
+- `/userinfo` - Display user information
+- `/serverinfo` - Display server information
 
-## 📝 License
+### Games
+- `/tictactoe` - Play Tic-Tac-Toe against bot or another player
+- `/connect4` - Strategic board game
+- `/doom` - Text-based DOOM dungeon crawler
+- `/trivia` - Play trivia quiz (coming soon)
+- `/rps` - Rock Paper Scissors (coming soon)
+
+### Fun
+- `/8ball` - Ask the magic 8-ball
+- `/joke` - Get a random joke
+- `/roll` - Roll dice with D&D notation
+- `/meme` - Get a random meme (coming soon)
+
+### Economy
+- `/balance` - Check your balance
+- `/daily` - Claim daily reward
+- `/pay` - Transfer coins to another user
+
+## Deployment with Cloudflare Tunnel
+
+1. Install cloudflared on your server
+2. Create a tunnel: `cloudflared tunnel create discord-bot`
+3. Add tunnel token to `.env`
+4. Run with docker-compose
+
+## License
 
 MIT License - feel free to use this bot for your own server!
 
-## 🔗 Links
+## Links
 
-- [Command Reference](COMMANDS.md) - Auto-generated command list
-- [Cloudflare Tunnel Setup](CLOUDFLARE_TUNNEL.md) - Secure webhook configuration
 - [Deployment Guide](deployment/DEPLOYMENT_GUIDE.md)
-- [Technical Documentation](docs/TECHNICAL_DOCS.md)
-- [Feature Specifications](docs/FEATURES_SPEC.md)
-- [Roadmap](docs/ROADMAP.md)
+- [Technical Documentation](TECHNICAL_DOCS.md)
+- [Feature Specifications](FEATURES_SPEC.md)
+- [DOOM on Discord](DOOM_ON_DISCORD.md) - How DOOM works on Discord
 
----
-
-Made with ❤️ for Discord communities

@@ -7,12 +7,35 @@ const cooldowns = new Collection<string, CooldownData>();
 const event: BotEvent = {
   name: Events.InteractionCreate,
   async execute(interaction: Interaction) {
-    if (!interaction.isChatInputCommand()) return;
+    logger.info(`Interaction received: ${interaction.type}`);
+    
+    if (!interaction.isChatInputCommand()) {
+      logger.info('Interaction is not a chat input command');
+      return;
+    }
 
-    const command = (interaction.client as any).commands?.get(interaction.commandName) as BotCommand;
+    logger.info(`Command interaction: ${interaction.commandName} by ${interaction.user.tag}`);
+    
+    const commands = (interaction.client as any).commands;
+    if (!commands) {
+      logger.error('Commands collection not found on client!');
+      await interaction.reply({
+        content: '❌ Bot is not properly initialized. Please contact the administrator.',
+        ephemeral: true
+      });
+      return;
+    }
+    
+    logger.info(`Available commands: ${Array.from(commands.keys()).join(', ')}`);
+    
+    const command = commands.get(interaction.commandName) as BotCommand;
 
     if (!command) {
       logger.warn(`No command matching ${interaction.commandName} was found.`);
+      await interaction.reply({
+        content: `❌ Command \`${interaction.commandName}\` not found!`,
+        ephemeral: true
+      });
       return;
     }
 
@@ -33,10 +56,11 @@ const event: BotEvent = {
 
       if (now < expirationTime) {
         const expiredTimestamp = Math.round(expirationTime / 1000);
-        return interaction.reply({
+        await interaction.reply({
           content: `Please wait, you are on a cooldown for \`${command.data.name}\`. You can use it again <t:${expiredTimestamp}:R>.`,
           ephemeral: true,
         });
+        return;
       }
     }
 

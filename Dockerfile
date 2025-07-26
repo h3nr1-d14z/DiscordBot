@@ -1,7 +1,7 @@
 FROM node:18-alpine
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build dependencies and FFmpeg for music
+RUN apk add --no-cache python3 make g++ ffmpeg
 
 # Create app directory
 WORKDIR /app
@@ -36,7 +36,7 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 # Expose health check port
-EXPOSE 3000
+EXPOSE 8736
 
 # Set environment
 ENV NODE_ENV=production

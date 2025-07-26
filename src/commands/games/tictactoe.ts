@@ -71,7 +71,7 @@ const command: BotCommand = {
     const components = createGameButtons(game);
     
     const response = await interaction.reply({
-      content: isVsBot ? null : `${opponent}, you have been challenged to Tic-Tac-Toe!`,
+      content: isVsBot ? undefined : `${opponent}, you have been challenged to Tic-Tac-Toe!`,
       embeds: [embed],
       components: components,
       fetchReply: true
@@ -105,7 +105,7 @@ const command: BotCommand = {
       
       if (winner || isDraw) {
         // Game over
-        await handleGameEnd(i, game, winner, isDraw, interaction.user, isVsBot ? null : opponent!);
+        await handleGameEnd(i, game, winner, isDraw, interaction.user, isVsBot ? null : opponent!, response);
         collector.stop();
         return;
       }
@@ -140,7 +140,7 @@ const command: BotCommand = {
             const isDraw = !winner && game.board.every(cell => cell !== '');
             
             if (winner || isDraw) {
-              await handleGameEnd(null, game, winner, isDraw, interaction.user, null);
+              await handleGameEnd(null, game, winner, isDraw, interaction.user, null, response);
               collector.stop();
             } else {
               game.currentPlayer = 0;
@@ -198,8 +198,8 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
         .setLabel(cell || '\u200b')
         .setStyle(
           cell === 'X' ? ButtonStyle.Primary : 
-          cell === 'O' ? ButtonStyle.Danger : 
-          ButtonStyle.Secondary
+            cell === 'O' ? ButtonStyle.Danger : 
+              ButtonStyle.Secondary
         )
         .setDisabled(cell !== '');
       
@@ -228,7 +228,8 @@ async function handleGameEnd(
   winner: string | null,
   isDraw: boolean,
   player1: User,
-  player2: User | null
+  player2: User | null,
+  message?: any
 ) {
   let resultMessage: string;
   let winnerId: string | null = null;
@@ -293,8 +294,8 @@ async function handleGameEnd(
       embeds: [finalEmbed],
       components: []
     });
-  } else {
-    await interaction?.message.edit({
+  } else if (message) {
+    await message.edit({
       embeds: [finalEmbed],
       components: []
     });

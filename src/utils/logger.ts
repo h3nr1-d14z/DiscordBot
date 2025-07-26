@@ -3,6 +3,29 @@ import path from 'path';
 
 const logDir = path.join(process.cwd(), 'logs');
 
+// Safe stringify function to handle circular references
+const safeStringify = (obj: any): string => {
+  const cache = new Set();
+  return JSON.stringify(obj, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return '[Circular]';
+      }
+      cache.add(value);
+    }
+    // Handle Error objects specially
+    if (value instanceof Error) {
+      return {
+        message: value.message,
+        stack: value.stack,
+        name: value.name,
+        ...value
+      };
+    }
+    return value;
+  }, 2);
+};
+
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
@@ -16,7 +39,11 @@ const consoleFormat = winston.format.combine(
   winston.format.printf(({ timestamp, level, message, ...metadata }) => {
     let msg = `${timestamp} [${level}]: ${message}`;
     if (Object.keys(metadata).length > 0) {
-      msg += ` ${JSON.stringify(metadata)}`;
+      try {
+        msg += ` ${safeStringify(metadata)}`;
+      } catch {
+        msg += ' [Unable to stringify metadata]';
+      }
     }
     return msg;
   })

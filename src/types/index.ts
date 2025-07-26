@@ -1,13 +1,10 @@
 import { 
-  CommandInteraction, 
-  SlashCommandBuilder, 
   ChatInputCommandInteraction,
-  Collection,
-  Message
+  Collection
 } from 'discord.js';
 
 export interface BotCommand {
-  data: SlashCommandBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>;
+  data: any; // Using any for now due to Discord.js type complexities
   execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
   cooldown?: number;
   category: CommandCategory;

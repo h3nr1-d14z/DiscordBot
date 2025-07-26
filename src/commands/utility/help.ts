@@ -60,13 +60,13 @@ const command: BotCommand = {
         .setTitle(`Command: /${command.data.name}`)
         .setDescription(command.data.description)
         .addFields(
-          { name: 'Category', value: categoryEmojis[command.category] + ' ' + command.category, inline: true },
+          { name: 'Category', value: categoryEmojis[command.category as CommandCategory] + ' ' + command.category, inline: true },
           { name: 'Cooldown', value: `${command.cooldown || 3} seconds`, inline: true }
         );
       
       // Add options if any
       if (command.data.options && command.data.options.length > 0) {
-        const options = command.data.options.map(opt => 
+        const options = command.data.options.map((opt: any) => 
           `**${opt.name}** ${opt.required ? '(required)' : '(optional)'}: ${opt.description}`
         ).join('\n');
         embed.addFields({ name: 'Options', value: options });
@@ -136,7 +136,7 @@ const command: BotCommand = {
       
       const selectedCategory = i.values[0] as CommandCategory;
       const categoryCommands = Array.from(commands.values())
-        .filter((cmd: BotCommand) => cmd.category === selectedCategory);
+        .filter((cmd) => (cmd as BotCommand).category === selectedCategory) as BotCommand[];
       
       const categoryEmbed = new EmbedBuilder()
         .setColor(0x0099FF)

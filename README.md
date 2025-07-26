@@ -1,90 +1,125 @@
-# Discord Fun Bot
+# Discord Fun Bot 🎮
 
-A feature-rich Discord bot with games, fun commands, and interactive features.
+A feature-rich Discord bot packed with games, fun commands, economy system, and more!
 
-## Features
+## ✨ Features
 
-- 🎮 **Games**: Trivia, Tic-Tac-Toe, Hangman, Connect Four, and more
-- 🎉 **Fun Commands**: 8ball, jokes, memes, ASCII art
-- 💰 **Economy System**: Virtual currency, daily rewards, shop
-- 📊 **Leveling System**: XP and levels based on activity
-- 🎁 **Interactive**: Polls, giveaways, and more
+- **🎮 Games**: Tic-Tac-Toe, Rock Paper Scissors, Trivia, Number Guessing, and more
+- **🎉 Fun Commands**: 8ball, Jokes, Memes, Dice Roll, Fortune Cookie
+- **💰 Economy System**: Virtual currency, daily rewards, leaderboard
+- **📊 Leveling System**: XP-based progression with rewards
+- **🛠️ Utility Commands**: User info, server stats, help system
 
-## Setup
+## 🚀 Quick Start
 
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Discord Bot Token
-
-### Installation
-
-1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in your bot token
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-### Development
+### Local Development
 
 ```bash
+# Clone repository
+git clone https://github.com/yourusername/discord-fun-bot.git
+cd discord-fun-bot
+
+# Setup
+./setup.sh
+
+# Configure
+cp .env.example .env
+# Edit .env with your Discord bot token
+
+# Run
 npm run dev
 ```
 
-### Production
+### Production Deployment (Debian Linux)
 
-#### Using PM2:
 ```bash
-npm run build
-npm run deploy
+# Quick deploy
+./deployment/install-debian.sh
+sudo su - discordbot
+cd /opt/discord-bot
+./deployment/deploy.sh
 ```
 
-#### Using Docker:
+📚 **Full deployment guide**: [deployment/DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md)
+
+## 📋 Commands
+
+| Command | Description | Category |
+|---------|-------------|----------|
+| `/help` | Show all commands | Utility |
+| `/ping` | Check bot latency | Utility |
+| `/tictactoe` | Play Tic-Tac-Toe | Games |
+| `/8ball` | Ask the magic 8-ball | Fun |
+| `/joke` | Get a random joke | Fun |
+| `/roll` | Roll dice (D&D notation) | Fun |
+| `/balance` | Check your coins | Economy |
+| `/daily` | Claim daily reward | Economy |
+
+## 🛠️ Tech Stack
+
+- **Runtime**: Node.js 18+ with TypeScript
+- **Framework**: Discord.js v14
+- **Database**: SQLite
+- **Process Manager**: PM2
+- **Deployment**: Docker + Cloudflare Tunnel
+
+## 📁 Project Structure
+
+```
+discord-bot/
+├── src/              # Source code
+├── docs/             # Documentation
+├── deployment/       # Deployment scripts
+├── docker/           # Docker configs
+└── package.json      # Dependencies
+```
+
+## 🔧 Configuration
+
+Create `.env` file:
+
+```env
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_client_id
+GUILD_ID=test_guild_id  # Optional
+DATABASE_PATH=./data/bot.db
+ENABLE_ECONOMY=true
+ENABLE_LEVELING=true
+```
+
+## 🐳 Docker Support
+
 ```bash
+# Using Docker Compose
 docker-compose up -d
+
+# View logs
+docker-compose logs -f bot
 ```
 
-## Configuration
+## 📈 Future Plans
 
-Edit `.env` file:
-- `DISCORD_TOKEN`: Your bot token from Discord Developer Portal
-- `CLIENT_ID`: Your application's client ID
-- `GUILD_ID`: Your test server ID (optional, for development)
+See [docs/ROADMAP.md](docs/ROADMAP.md) for upcoming features and development plans.
 
-## Commands
+## 🤝 Contributing
 
-### Utility
-- `/ping` - Check bot latency
-- `/help` - Show all commands
-- `/userinfo` - Display user information
-- `/serverinfo` - Display server information
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Games
-- `/trivia` - Play trivia quiz
-- `/tictactoe` - Play Tic-Tac-Toe
-- `/rps` - Rock Paper Scissors
-- `/hangman` - Word guessing game
+## 📝 License
 
-### Fun
-- `/8ball` - Ask the magic 8-ball
-- `/joke` - Get a random joke
-- `/meme` - Get a random meme
-- `/roll` - Roll dice
+MIT License - feel free to use this bot for your own server!
 
-### Economy
-- `/balance` - Check your balance
-- `/daily` - Claim daily reward
-- `/pay` - Transfer coins to another user
+## 🔗 Links
 
-## Deployment with Cloudflare Tunnel
+- [Deployment Guide](deployment/DEPLOYMENT_GUIDE.md)
+- [Technical Documentation](docs/TECHNICAL_DOCS.md)
+- [Feature Specifications](docs/FEATURES_SPEC.md)
+- [Roadmap](docs/ROADMAP.md)
 
-1. Install cloudflared on your server
-2. Create a tunnel: `cloudflared tunnel create discord-bot`
-3. Add tunnel token to `.env`
-4. Run with docker-compose
+---
 
-## License
-
-MIT
+Made with ❤️ for Discord communities

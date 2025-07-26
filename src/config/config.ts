@@ -13,7 +13,7 @@ export const config: Config = {
   enableEconomy: process.env.ENABLE_ECONOMY === 'true',
   enableLeveling: process.env.ENABLE_LEVELING === 'true',
   defaultPrefix: process.env.DEFAULT_PREFIX || '!',
-  port: parseInt(process.env.PORT || '3000'),
+  port: parseInt(process.env.PORT || '8736'),
   webhookPath: process.env.WEBHOOK_PATH || '/webhook',
 };
 

@@ -3,6 +3,20 @@
 echo "🚀 Discord Fun Bot Setup Script"
 echo "=============================="
 
+# Check for FFmpeg
+echo "🔍 Checking dependencies..."
+if ! command -v ffmpeg &> /dev/null; then
+    echo "⚠️  FFmpeg is not installed!"
+    echo "   FFmpeg is required for music playback."
+    echo "   Install instructions:"
+    echo "   - Ubuntu/Debian: sudo apt install ffmpeg"
+    echo "   - macOS: brew install ffmpeg"
+    echo "   - Windows: Download from ffmpeg.org"
+    echo ""
+else
+    echo "✅ FFmpeg found"
+fi
+
 # Check if .env exists
 if [ ! -f .env ]; then
     echo "❌ .env file not found!"

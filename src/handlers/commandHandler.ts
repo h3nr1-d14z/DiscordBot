@@ -15,22 +15,31 @@ export class CommandHandler {
   }
 
   async loadCommands(client: Client): Promise<void> {
-    const commandFolders = readdirSync(path.join(__dirname, '../commands'));
+    // Use process.cwd() for better path resolution with tsx
+    const commandsPath = path.join(process.cwd(), 'src', 'commands');
+    logger.info(`Loading commands from: ${commandsPath}`);
+    
+    const commandFolders = readdirSync(commandsPath);
+    logger.info(`Found command folders: ${commandFolders.join(', ')}`);
 
     for (const folder of commandFolders) {
-      const commandFiles = readdirSync(path.join(__dirname, '../commands', folder)).filter(
+      const folderPath = path.join(commandsPath, folder);
+      const commandFiles = readdirSync(folderPath).filter(
         file => file.endsWith('.ts') || file.endsWith('.js')
       );
+      logger.info(`Found ${commandFiles.length} command files in ${folder}`);
 
       for (const file of commandFiles) {
         try {
-          const filePath = path.join(__dirname, '../commands', folder, file);
+          const filePath = path.join(folderPath, file);
+          logger.info(`Loading command from: ${filePath}`);
+          
           const command = await import(filePath);
           
           if ('data' in command.default && 'execute' in command.default) {
             this.commands.set(command.default.data.name, command.default);
             this.commandArray.push(command.default.data.toJSON());
-            logger.info(`Loaded command: ${command.default.data.name}`);
+            logger.info(`✅ Loaded command: ${command.default.data.name}`);
           } else {
             logger.warn(`Command at ${filePath} is missing required "data" or "execute" property`);
           }
@@ -40,6 +49,7 @@ export class CommandHandler {
       }
     }
 
+    logger.info(`Total commands loaded: ${this.commands.size}`);
     (client as any).commands = this.commands;
   }
 

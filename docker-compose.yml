@@ -5,33 +5,21 @@ services:
     build: .
     container_name: discord-fun-bot
     restart: unless-stopped
+    ports:
+      - "8736:8736"  # Map custom port
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./.env:/app/.env:ro
     environment:
       - NODE_ENV=production
-    networks:
-      - bot-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8736/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: discord-bot-tunnel
-    restart: unless-stopped
-    command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    networks:
-      - bot-network
-    depends_on:
-      - bot
-
 networks:
-  bot-network:
-    driver: bridge
+  default:
+    name: discord-bot-network

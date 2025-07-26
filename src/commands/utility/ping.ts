@@ -19,7 +19,7 @@ const command: BotCommand = {
     const apiLatency = Math.round(interaction.client.ws.ping);
     
     await interaction.editReply(
-      `🏓 Pong!\n` +
+      '🏓 Pong!\n' +
       `💬 **Latency**: ${latency}ms\n` +
       `📡 **API Latency**: ${apiLatency}ms`
     );

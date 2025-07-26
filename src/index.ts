@@ -3,12 +3,14 @@ import { config, validateConfig } from './config/config';
 import { CommandHandler } from './handlers/commandHandler';
 import { EventHandler } from './handlers/eventHandler';
 import { database } from './services/database';
+import { HealthCheckServer } from './services/healthCheck';
 import { logger } from './utils/logger';
 
 class DiscordBot {
   private client: Client;
   private commandHandler: CommandHandler;
   private eventHandler: EventHandler;
+  private healthCheckServer: HealthCheckServer;
 
   constructor() {
     this.client = new Client({
@@ -18,6 +20,7 @@ class DiscordBot {
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.GuildVoiceStates,
       ],
       partials: [
         Partials.Channel,
@@ -29,6 +32,7 @@ class DiscordBot {
 
     this.commandHandler = new CommandHandler();
     this.eventHandler = new EventHandler();
+    this.healthCheckServer = new HealthCheckServer(this.client);
   }
 
   async start(): Promise<void> {
@@ -48,6 +52,9 @@ class DiscordBot {
 
       // Login to Discord
       await this.client.login(config.token);
+      
+      // Start health check server
+      this.healthCheckServer.start();
     } catch (error) {
       logger.error('Failed to start bot:', error);
       process.exit(1);
@@ -58,6 +65,9 @@ class DiscordBot {
     logger.info('Shutting down bot...');
     
     try {
+      // Stop health check server
+      this.healthCheckServer.stop();
+      
       // Close database connection
       await database.close();
       

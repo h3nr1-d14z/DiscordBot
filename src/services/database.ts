@@ -73,9 +73,9 @@ export class Database {
         FOREIGN KEY (user_id) REFERENCES users(user_id)
       )`,
 
-      `CREATE INDEX IF NOT EXISTS idx_user_id ON game_stats(user_id)`,
-      `CREATE INDEX IF NOT EXISTS idx_game_type ON game_stats(game_type)`,
-      `CREATE INDEX IF NOT EXISTS idx_channel_id ON active_games(channel_id)`,
+      'CREATE INDEX IF NOT EXISTS idx_user_id ON game_stats(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_game_type ON game_stats(game_type)',
+      'CREATE INDEX IF NOT EXISTS idx_channel_id ON active_games(channel_id)',
     ];
 
     for (const query of queries) {

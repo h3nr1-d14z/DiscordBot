@@ -19,6 +19,7 @@ export interface BotEvent {
 export enum CommandCategory {
   Fun = 'fun',
   Games = 'games',
+  Music = 'music',
   Utility = 'utility',
   Economy = 'economy',
   Moderation = 'moderation',

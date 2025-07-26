@@ -47,14 +47,25 @@ class DiscordBot {
       await this.commandHandler.loadCommands(this.client);
       await this.eventHandler.loadEvents(this.client);
 
-      // Register commands
-      await this.commandHandler.registerCommands();
+      // Register commands (automatic in development mode)
+      if (process.env.NODE_ENV === 'development' || process.env.AUTO_REGISTER === 'true') {
+        logger.info('Auto-registering commands (development mode)...');
+        await this.commandHandler.registerCommands();
+      } else {
+        logger.info('Skipping command registration. Run "npm run register" to update commands.');
+      }
 
       // Login to Discord
       await this.client.login(config.token);
       
       // Start health check server
       this.healthCheckServer.start();
+      
+      // In development mode, watch for command changes
+      if (process.env.NODE_ENV === 'development') {
+        const { watchCommands } = await import('./utils/watchCommands');
+        watchCommands();
+      }
     } catch (error) {
       logger.error('Failed to start bot:', error);
       process.exit(1);

@@ -108,6 +108,7 @@ export interface Config {
   token: string;
   clientId: string;
   guildId?: string;
+  guildIds: string[];
   databasePath: string;
   weatherApiKey?: string;
   tunnelToken?: string;

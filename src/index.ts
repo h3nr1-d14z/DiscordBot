@@ -4,6 +4,7 @@ import { CommandHandler } from './handlers/commandHandler';
 import { EventHandler } from './handlers/eventHandler';
 import { database } from './services/database';
 import { HealthCheckServer } from './services/healthCheck';
+import { ReminderService, reminderService as reminderServiceInstance } from './services/reminderService';
 import { logger } from './utils/logger';
 
 class DiscordBot {
@@ -60,6 +61,10 @@ class DiscordBot {
       
       // Start health check server
       this.healthCheckServer.start();
+      
+      // Initialize reminder service
+      const reminderService = new ReminderService(this.client);
+      await reminderService.initialize();
       
       // In development mode, watch for command changes
       if (process.env.NODE_ENV === 'development') {

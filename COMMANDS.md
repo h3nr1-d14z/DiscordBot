@@ -1,6 +1,6 @@
 # Discord Fun Bot - Command Reference
 
-> 📝 This documentation is auto-generated. Last updated: 2025-07-26T11:20:32.417Z
+> 📝 This documentation is auto-generated. Last updated: 2025-07-27T04:54:02.044Z
 
 ## Table of Contents
 

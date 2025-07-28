@@ -9,6 +9,9 @@ A feature-rich Discord bot with games, fun commands, and interactive features.
 - 💰 **Economy System**: Virtual currency, daily rewards, shop
 - 📊 **Leveling System**: XP and levels based on activity
 - 🎁 **Interactive**: Polls, giveaways, and more
+- 🎭 **Role Management**: Band and team role redemption system
+- 📋 **ClickUp Integration**: Task management, reminders, and productivity features
+- 🎵 **Music**: Play music from YouTube (requires additional setup)
 
 ## Setup
 
@@ -32,6 +35,24 @@ A feature-rich Discord bot with games, fun commands, and interactive features.
 ```bash
 npm run dev
 ```
+
+### Command Management
+
+```bash
+# Register commands to development server
+npm run register
+
+# Register commands globally
+npm run register:global
+
+# Clear commands
+npm run clear-commands
+
+# See more options
+npm run register -- --help
+```
+
+See [Command Management Guide](docs/COMMAND_MANAGEMENT.md) for detailed information.
 
 ### Production
 

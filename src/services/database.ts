@@ -72,10 +72,67 @@ export class Database {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(user_id)
       )`,
+      
+      `CREATE TABLE IF NOT EXISTS redeemable_roles (
+        role_id TEXT PRIMARY KEY,
+        role_name TEXT NOT NULL,
+        role_type TEXT NOT NULL CHECK(role_type IN ('band', 'team')),
+        description TEXT,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS user_roles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        role_id TEXT NOT NULL,
+        redeemed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        FOREIGN KEY (role_id) REFERENCES redeemable_roles(role_id),
+        UNIQUE(user_id, role_id)
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS clickup_users (
+        user_id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        clickup_user_id TEXT,
+        workspace_id TEXT,
+        api_token TEXT,
+        linked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS clickup_tasks_cache (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        task_name TEXT NOT NULL,
+        task_description TEXT,
+        due_date DATETIME,
+        priority TEXT,
+        status TEXT,
+        list_name TEXT,
+        space_name TEXT,
+        cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+      )`,
+      
+      `CREATE TABLE IF NOT EXISTS user_reminders (
+        user_id TEXT PRIMARY KEY,
+        channel_id TEXT NOT NULL,
+        reminder_time TEXT NOT NULL,
+        is_enabled BOOLEAN DEFAULT 1,
+        last_sent DATE,
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+      )`,
 
       'CREATE INDEX IF NOT EXISTS idx_user_id ON game_stats(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_game_type ON game_stats(game_type)',
       'CREATE INDEX IF NOT EXISTS idx_channel_id ON active_games(channel_id)',
+      'CREATE INDEX IF NOT EXISTS idx_role_type ON redeemable_roles(role_type)',
+      'CREATE INDEX IF NOT EXISTS idx_user_roles ON user_roles(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_clickup_email ON clickup_users(email)',
+      'CREATE INDEX IF NOT EXISTS idx_task_due_date ON clickup_tasks_cache(due_date)',
     ];
 
     for (const query of queries) {
@@ -174,6 +231,105 @@ export class Database {
     await this.run(
       'INSERT INTO transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)',
       [userId, amount, type, description]
+    );
+  }
+
+  async getRedeemableRoles(type?: 'band' | 'team'): Promise<any[]> {
+    if (type) {
+      return await this.all(
+        'SELECT * FROM redeemable_roles WHERE role_type = ? AND is_active = 1',
+        [type]
+      );
+    }
+    return await this.all('SELECT * FROM redeemable_roles WHERE is_active = 1');
+  }
+
+  async addRedeemableRole(roleId: string, roleName: string, roleType: 'band' | 'team', description?: string): Promise<void> {
+    await this.run(
+      'INSERT INTO redeemable_roles (role_id, role_name, role_type, description) VALUES (?, ?, ?, ?)',
+      [roleId, roleName, roleType, description]
+    );
+  }
+
+  async getUserRoles(userId: string): Promise<any[]> {
+    return await this.all(
+      `SELECT r.* FROM redeemable_roles r 
+       JOIN user_roles ur ON r.role_id = ur.role_id 
+       WHERE ur.user_id = ?`,
+      [userId]
+    );
+  }
+
+  async redeemRole(userId: string, roleId: string): Promise<boolean> {
+    try {
+      await this.run(
+        'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)',
+        [userId, roleId]
+      );
+      return true;
+    } catch (error: any) {
+      if (error.code === 'SQLITE_CONSTRAINT') {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  async hasRole(userId: string, roleId: string): Promise<boolean> {
+    const result = await this.get(
+      'SELECT 1 FROM user_roles WHERE user_id = ? AND role_id = ?',
+      [userId, roleId]
+    );
+    return !!result;
+  }
+
+  async getClickUpUser(userId: string): Promise<any | null> {
+    return await this.get('SELECT * FROM clickup_users WHERE user_id = ?', [userId]);
+  }
+
+  async linkClickUpEmail(userId: string, email: string): Promise<void> {
+    await this.run(
+      'INSERT OR REPLACE INTO clickup_users (user_id, email) VALUES (?, ?)',
+      [userId, email]
+    );
+  }
+
+  async updateClickUpUser(userId: string, updates: any): Promise<void> {
+    const fields = Object.keys(updates)
+      .map(key => `${this.camelToSnake(key)} = ?`)
+      .join(', ');
+    const values = Object.values(updates);
+    values.push(userId);
+    
+    await this.run(
+      `UPDATE clickup_users SET ${fields} WHERE user_id = ?`,
+      values
+    );
+  }
+
+  async cacheClickUpTasks(userId: string, tasks: any[]): Promise<void> {
+    await this.run('DELETE FROM clickup_tasks_cache WHERE user_id = ?', [userId]);
+    
+    for (const task of tasks) {
+      await this.run(
+        `INSERT INTO clickup_tasks_cache 
+         (user_id, task_id, task_name, task_description, due_date, priority, status, list_name, space_name) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userId, task.taskId, task.taskName, task.taskDescription, task.dueDate, task.priority, task.status, task.listName, task.spaceName]
+      );
+    }
+  }
+
+  async getUpcomingTasks(userId: string, days: number = 14): Promise<any[]> {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + days);
+    
+    return await this.all(
+      `SELECT * FROM clickup_tasks_cache 
+       WHERE user_id = ? AND due_date IS NOT NULL 
+       AND due_date BETWEEN datetime('now') AND datetime(?)
+       ORDER BY due_date ASC`,
+      [userId, futureDate.toISOString()]
     );
   }
 

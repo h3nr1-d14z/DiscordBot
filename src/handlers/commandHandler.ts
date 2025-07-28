@@ -83,4 +83,33 @@ export class CommandHandler {
   getCommands(): Collection<string, BotCommand> {
     return this.commands;
   }
+  
+  async loadCommandsForRegistration(): Promise<any[]> {
+    const commands: any[] = [];
+    const commandsPath = path.join(process.cwd(), 'src', 'commands');
+    
+    const commandFolders = readdirSync(commandsPath);
+    
+    for (const folder of commandFolders) {
+      const folderPath = path.join(commandsPath, folder);
+      const commandFiles = readdirSync(folderPath).filter(
+        file => file.endsWith('.ts') || file.endsWith('.js')
+      );
+      
+      for (const file of commandFiles) {
+        try {
+          const filePath = path.join(folderPath, file);
+          const command = await import(filePath);
+          
+          if ('data' in command.default && 'execute' in command.default) {
+            commands.push(command.default.data.toJSON());
+          }
+        } catch (error) {
+          logger.error(`Failed to load command from ${file} for registration:`, error);
+        }
+      }
+    }
+    
+    return commands;
+  }
 }

@@ -1,4 +1,4 @@
-import { Client, Events, ActivityType } from 'discord.js';
+import { Client, Events, ActivityType, PermissionFlagsBits } from 'discord.js';
 import { BotEvent } from '../types';
 import { logger } from '../utils/logger';
 import { config } from '../config/config';
@@ -18,8 +18,24 @@ const event: BotEvent = {
     logger.info(`Bot is in ${client.guilds.cache.size} guilds`);
     logger.info(`Serving ${client.users.cache.size} users`);
     
+    // Calculate permissions using Discord.js permission flags
+    const permissions = [
+      PermissionFlagsBits.ViewChannel,
+      PermissionFlagsBits.SendMessages,
+      PermissionFlagsBits.SendMessagesInThreads,
+      PermissionFlagsBits.EmbedLinks,
+      PermissionFlagsBits.AttachFiles,
+      PermissionFlagsBits.ReadMessageHistory,
+      PermissionFlagsBits.UseExternalEmojis,
+      PermissionFlagsBits.AddReactions,
+      PermissionFlagsBits.Connect,
+      PermissionFlagsBits.Speak,
+      PermissionFlagsBits.UseVAD,
+      PermissionFlagsBits.ManageMessages,
+      PermissionFlagsBits.ManageRoles,  // Added for role management
+    ].reduce((acc, perm) => acc | perm, 0n);
+    
     // Generate invite link with proper permissions
-    const permissions = '414531994688'; // All necessary permissions
     const inviteLink = `https://discord.com/api/oauth2/authorize?client_id=${config.clientId}&permissions=${permissions}&scope=bot%20applications.commands`;
     
     logger.info('===============================================');

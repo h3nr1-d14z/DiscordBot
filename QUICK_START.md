@@ -50,7 +50,22 @@ CLIENT_ID=your_client_id_here
 
 ## Bot Invite Link
 ```
-https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands
+https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=682799431744&scope=bot%20applications.commands
 ```
 
 Replace `YOUR_CLIENT_ID` with your bot's client ID.
+
+### Required Permissions:
+- View Channels
+- Send Messages
+- Send Messages in Threads
+- Embed Links
+- Attach Files
+- Read Message History
+- Use External Emojis
+- Add Reactions
+- Connect (for voice channels)
+- Speak
+- Use Voice Activity
+- Manage Messages
+- **Manage Roles** (for role redemption feature)

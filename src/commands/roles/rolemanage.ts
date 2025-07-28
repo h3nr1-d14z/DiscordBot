@@ -65,9 +65,51 @@ const command: Command = {
           const role = interaction.options.getRole('role', true);
           const type = interaction.options.getString('type', true) as 'band' | 'team';
           const description = interaction.options.getString('description');
+          const guildId = interaction.guildId!;
+
+          // Check if role already exists in this guild
+          const existingRole = await database.getRedeemableRole(guildId, role.id);
+          
+          if (existingRole) {
+            // If role exists but is inactive, reactivate it
+            if (!existingRole.is_active) {
+              await database.reactivateRedeemableRole(guildId, role.id, description || undefined);
+              
+              const embed = new EmbedBuilder()
+                .setTitle('✅ Role Reactivated')
+                .setDescription(`**${role.name}** has been reactivated in the redeemable roles list!`)
+                .setColor(0x00C853)
+                .addFields(
+                  { name: 'Role', value: role.toString(), inline: true },
+                  { name: 'Type', value: existingRole.role_type, inline: true },
+                  { name: 'Description', value: description || existingRole.description || 'No description', inline: false }
+                );
+              
+              if (description && description !== existingRole.description) {
+                embed.addFields({ name: '📝 Updated', value: 'Description has been updated', inline: true });
+              }
+              
+              await interaction.editReply({ embeds: [embed] });
+              return;
+            }
+            
+            // Role is already active
+            const embed = new EmbedBuilder()
+              .setTitle('⚠️ Role Already Active')
+              .setDescription(`**${role.name}** is already active in the redeemable roles list!`)
+              .setColor(0xFFA726)
+              .addFields(
+                { name: 'Role', value: role.toString(), inline: true },
+                { name: 'Type', value: existingRole.role_type, inline: true },
+                { name: 'Description', value: existingRole.description || 'No description', inline: false }
+              );
+            
+            await interaction.editReply({ embeds: [embed] });
+            return;
+          }
 
           try {
-            await database.addRedeemableRole(role.id, role.name, type, description || undefined);
+            await database.addRedeemableRole(guildId, role.id, role.name, type, description || undefined);
 
             const embed = new EmbedBuilder()
               .setTitle('✅ Role Added')
@@ -81,31 +123,29 @@ const command: Command = {
 
             await interaction.editReply({ embeds: [embed] });
           } catch (error: any) {
-            if (error.code === 'SQLITE_CONSTRAINT') {
-              await interaction.editReply({
-                content: 'This role is already in the redeemable roles list!'
-              });
-            } else {
-              throw error;
-            }
+            logger.error('Error adding redeemable role:', error);
+            await interaction.editReply({
+              content: '❌ An unexpected error occurred while adding the role. Please try again.'
+            });
           }
           break;
         }
 
         case 'list': {
           const typeFilter = interaction.options.getString('type') as 'band' | 'team' | null;
-          const roles = await database.getRedeemableRoles(typeFilter || undefined);
+          const guildId = interaction.guildId!;
+          const roles = await database.getRedeemableRoles(guildId, typeFilter || undefined);
 
           if (roles.length === 0) {
             await interaction.editReply({
-              content: typeFilter ? `No ${typeFilter} roles found.` : 'No redeemable roles found.'
+              content: typeFilter ? `No ${typeFilter} roles found in this server.` : 'No redeemable roles found in this server.'
             });
             return;
           }
 
           const embed = new EmbedBuilder()
             .setTitle('📋 Redeemable Roles')
-            .setDescription(typeFilter ? `Showing ${typeFilter} roles:` : 'Showing all redeemable roles:')
+            .setDescription(typeFilter ? `Showing ${typeFilter} roles for this server:` : 'Showing all redeemable roles for this server:')
             .setColor(0x5865F2);
 
           const bandRoles = roles.filter(r => r.role_type === 'band');
@@ -139,16 +179,41 @@ const command: Command = {
 
         case 'remove': {
           const role = interaction.options.getRole('role', true);
+          const guildId = interaction.guildId!;
           
-          await database.run(
-            'UPDATE redeemable_roles SET is_active = 0 WHERE role_id = ?',
-            [role.id]
-          );
+          // Check if role exists in this guild
+          const existingRole = await database.getRedeemableRole(guildId, role.id);
+          
+          if (!existingRole) {
+            const embed = new EmbedBuilder()
+              .setTitle('❌ Role Not Found')
+              .setDescription(`**${role.name}** is not in the redeemable roles list for this server!`)
+              .setColor(0xF44336);
+            
+            await interaction.editReply({ embeds: [embed] });
+            return;
+          }
+          
+          if (!existingRole.is_active) {
+            const embed = new EmbedBuilder()
+              .setTitle('⚠️ Role Already Inactive')
+              .setDescription(`**${role.name}** has already been removed from the redeemable roles list!`)
+              .setColor(0xFFA726);
+            
+            await interaction.editReply({ embeds: [embed] });
+            return;
+          }
+          
+          await database.removeRedeemableRole(guildId, role.id);
 
           const embed = new EmbedBuilder()
             .setTitle('✅ Role Removed')
             .setDescription(`Successfully removed **${role.name}** from redeemable roles!`)
-            .setColor(0xF44336);
+            .setColor(0xF44336)
+            .addFields(
+              { name: 'Role', value: role.toString(), inline: true },
+              { name: 'Type', value: existingRole.role_type, inline: true }
+            );
 
           await interaction.editReply({ embeds: [embed] });
           break;

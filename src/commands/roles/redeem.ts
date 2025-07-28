@@ -19,7 +19,8 @@ const command: Command = {
         await database.createUser(userId, interaction.user.username);
       }
 
-      const userRoles = await database.getUserRoles(userId);
+      const guildId = interaction.guildId!;
+      const userRoles = await database.getUserRoles(guildId, userId);
       const userRoleIds = userRoles.map(r => r.role_id);
 
       const embed = new EmbedBuilder()
@@ -68,7 +69,7 @@ const command: Command = {
         }
 
         if (buttonInteraction.customId === 'view_my_roles') {
-          const myRoles = await database.getUserRoles(userId);
+          const myRoles = await database.getUserRoles(guildId, userId);
           
           if (myRoles.length === 0) {
             await buttonInteraction.reply({
@@ -91,7 +92,7 @@ const command: Command = {
         }
 
         const roleType = buttonInteraction.customId === 'redeem_band' ? 'band' : 'team';
-        const availableRoles = await database.getRedeemableRoles(roleType);
+        const availableRoles = await database.getRedeemableRoles(guildId, roleType);
         
         const redeemableRoles = availableRoles.filter(r => !userRoleIds.includes(r.role_id));
 
@@ -142,7 +143,7 @@ const command: Command = {
         }
 
         const selectedRoleId = selectInteraction.values[0];
-        const allRoles = await database.getRedeemableRoles();
+        const allRoles = await database.getRedeemableRoles(guildId);
         const selectedRole = allRoles.find(r => r.role_id === selectedRoleId);
 
         if (!selectedRole) {
@@ -153,7 +154,7 @@ const command: Command = {
           return;
         }
 
-        const success = await database.redeemRole(userId, selectedRoleId);
+        const success = await database.redeemRole(guildId, userId, selectedRoleId);
 
         if (!success) {
           await selectInteraction.reply({
@@ -167,26 +168,72 @@ const command: Command = {
           const member = await interaction.guild?.members.fetch(userId);
           const discordRole = interaction.guild?.roles.cache.get(selectedRoleId);
           
-          if (member && discordRole) {
-            await member.roles.add(discordRole);
+          if (!member || !discordRole) {
+            await selectInteraction.update({
+              content: '❌ Could not find the role or member. Please try again.',
+              embeds: [],
+              components: []
+            });
+            return;
           }
-        } catch (error) {
+
+          // Check if bot has permission to manage roles
+          const botMember = interaction.guild?.members.me;
+          if (!botMember?.permissions.has('ManageRoles')) {
+            await selectInteraction.update({
+              content: '❌ I don\'t have permission to manage roles. Please contact an administrator.',
+              embeds: [],
+              components: []
+            });
+            return;
+          }
+
+          // Check role hierarchy - bot's highest role must be above the role being assigned
+          const botHighestRole = botMember.roles.highest;
+          if (discordRole.position >= botHighestRole.position) {
+            await selectInteraction.update({
+              content: `❌ I cannot assign this role because it's higher than or equal to my highest role.\n\nPlease ask an administrator to move my role above **${discordRole.name}** in the server settings.`,
+              embeds: [],
+              components: []
+            });
+            return;
+          }
+
+          await member.roles.add(discordRole);
+
+          const successEmbed = new EmbedBuilder()
+            .setTitle('✅ Role Redeemed!')
+            .setDescription(`You have successfully redeemed the **${selectedRole.role_name}** role!`)
+            .setColor(0x00C853)
+            .addFields(
+              { name: 'Role Type', value: selectedRole.role_type, inline: true },
+              { name: 'Description', value: selectedRole.description || 'No description', inline: true }
+            );
+
+          await selectInteraction.update({
+            embeds: [successEmbed],
+            components: []
+          });
+          
+        } catch (error: any) {
           logger.error('Failed to add Discord role:', error);
+          
+          let errorMessage = '❌ Failed to assign the role. ';
+          
+          if (error.code === 50001) {
+            errorMessage += 'I don\'t have access to manage this role. Please check my permissions.';
+          } else if (error.code === 50013) {
+            errorMessage += 'I don\'t have permission to manage roles in this server.';
+          } else {
+            errorMessage += 'An unexpected error occurred. Please try again later.';
+          }
+          
+          await selectInteraction.update({
+            content: errorMessage,
+            embeds: [],
+            components: []
+          });
         }
-
-        const successEmbed = new EmbedBuilder()
-          .setTitle('✅ Role Redeemed!')
-          .setDescription(`You have successfully redeemed the **${selectedRole.role_name}** role!`)
-          .setColor(0x00C853)
-          .addFields(
-            { name: 'Role Type', value: selectedRole.role_type, inline: true },
-            { name: 'Description', value: selectedRole.description || 'No description', inline: true }
-          );
-
-        await selectInteraction.update({
-          embeds: [successEmbed],
-          components: []
-        });
 
         collector.stop();
         selectCollector.stop();

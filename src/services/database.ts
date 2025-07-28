@@ -74,22 +74,25 @@ export class Database {
       )`,
       
       `CREATE TABLE IF NOT EXISTS redeemable_roles (
-        role_id TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id TEXT NOT NULL,
+        role_id TEXT NOT NULL,
         role_name TEXT NOT NULL,
         role_type TEXT NOT NULL CHECK(role_type IN ('band', 'team')),
         description TEXT,
         is_active BOOLEAN DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(guild_id, role_id)
       )`,
       
       `CREATE TABLE IF NOT EXISTS user_roles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guild_id TEXT NOT NULL,
         user_id TEXT NOT NULL,
         role_id TEXT NOT NULL,
         redeemed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(user_id),
-        FOREIGN KEY (role_id) REFERENCES redeemable_roles(role_id),
-        UNIQUE(user_id, role_id)
+        UNIQUE(guild_id, user_id, role_id)
       )`,
       
       `CREATE TABLE IF NOT EXISTS clickup_users (
@@ -234,37 +237,62 @@ export class Database {
     );
   }
 
-  async getRedeemableRoles(type?: 'band' | 'team'): Promise<any[]> {
+  async getRedeemableRoles(guildId: string, type?: 'band' | 'team'): Promise<any[]> {
     if (type) {
       return await this.all(
-        'SELECT * FROM redeemable_roles WHERE role_type = ? AND is_active = 1',
-        [type]
+        'SELECT * FROM redeemable_roles WHERE guild_id = ? AND role_type = ? AND is_active = 1',
+        [guildId, type]
       );
     }
-    return await this.all('SELECT * FROM redeemable_roles WHERE is_active = 1');
+    return await this.all('SELECT * FROM redeemable_roles WHERE guild_id = ? AND is_active = 1', [guildId]);
   }
 
-  async addRedeemableRole(roleId: string, roleName: string, roleType: 'band' | 'team', description?: string): Promise<void> {
+  async getRedeemableRole(guildId: string, roleId: string): Promise<any | null> {
+    return await this.get('SELECT * FROM redeemable_roles WHERE guild_id = ? AND role_id = ?', [guildId, roleId]);
+  }
+
+  async addRedeemableRole(guildId: string, roleId: string, roleName: string, roleType: 'band' | 'team', description?: string): Promise<void> {
     await this.run(
-      'INSERT INTO redeemable_roles (role_id, role_name, role_type, description) VALUES (?, ?, ?, ?)',
-      [roleId, roleName, roleType, description]
+      'INSERT INTO redeemable_roles (guild_id, role_id, role_name, role_type, description) VALUES (?, ?, ?, ?, ?)',
+      [guildId, roleId, roleName, roleType, description]
     );
   }
 
-  async getUserRoles(userId: string): Promise<any[]> {
+  async removeRedeemableRole(guildId: string, roleId: string): Promise<void> {
+    await this.run(
+      'UPDATE redeemable_roles SET is_active = 0 WHERE guild_id = ? AND role_id = ?',
+      [guildId, roleId]
+    );
+  }
+
+  async reactivateRedeemableRole(guildId: string, roleId: string, description?: string): Promise<void> {
+    if (description !== undefined) {
+      await this.run(
+        'UPDATE redeemable_roles SET is_active = 1, description = ? WHERE guild_id = ? AND role_id = ?',
+        [description, guildId, roleId]
+      );
+    } else {
+      await this.run(
+        'UPDATE redeemable_roles SET is_active = 1 WHERE guild_id = ? AND role_id = ?',
+        [guildId, roleId]
+      );
+    }
+  }
+
+  async getUserRoles(guildId: string, userId: string): Promise<any[]> {
     return await this.all(
       `SELECT r.* FROM redeemable_roles r 
-       JOIN user_roles ur ON r.role_id = ur.role_id 
-       WHERE ur.user_id = ?`,
-      [userId]
+       JOIN user_roles ur ON r.role_id = ur.role_id AND r.guild_id = ur.guild_id
+       WHERE ur.guild_id = ? AND ur.user_id = ?`,
+      [guildId, userId]
     );
   }
 
-  async redeemRole(userId: string, roleId: string): Promise<boolean> {
+  async redeemRole(guildId: string, userId: string, roleId: string): Promise<boolean> {
     try {
       await this.run(
-        'INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)',
-        [userId, roleId]
+        'INSERT INTO user_roles (guild_id, user_id, role_id) VALUES (?, ?, ?)',
+        [guildId, userId, roleId]
       );
       return true;
     } catch (error: any) {
@@ -275,10 +303,10 @@ export class Database {
     }
   }
 
-  async hasRole(userId: string, roleId: string): Promise<boolean> {
+  async hasRole(guildId: string, userId: string, roleId: string): Promise<boolean> {
     const result = await this.get(
-      'SELECT 1 FROM user_roles WHERE user_id = ? AND role_id = ?',
-      [userId, roleId]
+      'SELECT 1 FROM user_roles WHERE guild_id = ? AND user_id = ? AND role_id = ?',
+      [guildId, userId, roleId]
     );
     return !!result;
   }

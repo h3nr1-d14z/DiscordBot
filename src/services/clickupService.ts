@@ -101,7 +101,7 @@ export class ClickUpService {
     }
 
     try {
-      const tasks = await this.fetchTasksFromClickUp(clickupUser.api_token, clickupUser.workspace_id, days);
+      const tasks = await this.fetchTasksFromClickUp(clickupUser.api_token, clickupUser.workspace_id, clickupUser.clickup_user_id, days);
       
       const cachedTasks: CachedTask[] = tasks.map(task => ({
         taskId: task.id,
@@ -138,7 +138,7 @@ export class ClickUpService {
     }
   }
 
-  private async fetchTasksFromClickUp(apiToken: string, workspaceId: string, days: number): Promise<ClickUpTask[]> {
+  private async fetchTasksFromClickUp(apiToken: string, workspaceId: string, clickupUserId: string, days: number): Promise<ClickUpTask[]> {
     const now = Date.now();
     const futureDate = now + (days * 24 * 60 * 60 * 1000);
     
@@ -148,7 +148,7 @@ export class ClickUpService {
           'Authorization': apiToken
         },
         params: {
-          assignees: 'me',
+          assignees: [clickupUserId],
           due_date_gt: now,
           due_date_lt: futureDate,
           include_closed: false,
@@ -157,8 +157,13 @@ export class ClickUpService {
       });
       
       return response.data.tasks;
-    } catch (error) {
+    } catch (error: any) {
       logger.error('ClickUp API error:', error);
+      
+      if (error.response?.data?.err) {
+        throw new Error(`ClickUp API error: ${error.response.data.err}`);
+      }
+      
       throw new Error('Failed to fetch tasks from ClickUp');
     }
   }

@@ -16,6 +16,11 @@ const event: BotEvent = {
         await handleClickUpLinkModal(interaction);
         return;
       }
+      // Return early for game-related modals - they're handled by collectors
+      if (interaction.customId === 'letter_guess_modal' || 
+          interaction.customId === 'letter_guess_modal_challenge') {
+        return;
+      }
     }
     
     if (!interaction.isChatInputCommand()) {

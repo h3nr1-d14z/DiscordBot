@@ -33,6 +33,9 @@ const event: BotEvent = {
       PermissionFlagsBits.UseVAD,
       PermissionFlagsBits.ManageMessages,
       PermissionFlagsBits.ManageRoles,  // Added for role management
+      PermissionFlagsBits.UseApplicationCommands,  // For slash command followUps
+      PermissionFlagsBits.CreateInstantInvite,  // Required for embedded activities
+      PermissionFlagsBits.UseEmbeddedActivities,  // For Discord activities/games
     ].reduce((acc, perm) => acc | perm, 0n);
     
     // Generate invite link with proper permissions
@@ -44,6 +47,7 @@ const event: BotEvent = {
     logger.info('===============================================');
     logger.info('Make sure to use this link to invite the bot!');
     logger.info('The bot needs applications.commands scope for slash commands to work!');
+    logger.info('For embedded activities, ensure the bot has Create Instant Invite permission in voice channels.');
     
     // Debug: List all servers (helpful for troubleshooting)
     if (client.guilds.cache.size > 0) {

@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import path from 'path';
+import fs from 'fs';
 import { config } from '../config/config';
 import { logger } from '../utils/logger';
 import { User, GameStats, ActiveGame } from '../types';
@@ -13,6 +14,17 @@ export class Database {
 
   constructor() {
     const dbPath = path.resolve(config.databasePath);
+    
+    // Ensure data directory exists
+    const dataDir = path.dirname(dbPath);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+      logger.info(`Created data directory: ${dataDir}`);
+    }
+    
+    // Log which database is being used
+    logger.info(`Using database: ${dbPath}`);
+    
     this.db = new sqlite3.Database(dbPath);
     
     this.run = promisify(this.db.run.bind(this.db));
@@ -23,10 +35,38 @@ export class Database {
   async initialize(): Promise<void> {
     try {
       await this.createTables();
+      await this.migrateIfNeeded();
       logger.info('Database initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize database:', error);
       throw error;
+    }
+  }
+
+  private async migrateIfNeeded(): Promise<void> {
+    const currentDbPath = path.resolve(config.databasePath);
+    const mainDbPath = path.resolve('./data/bot.db');
+    
+    // If current DB is the main DB or current DB already exists, no migration needed
+    if (currentDbPath === mainDbPath || fs.existsSync(currentDbPath)) {
+      return;
+    }
+    
+    // If main DB doesn't exist, no migration possible
+    if (!fs.existsSync(mainDbPath)) {
+      logger.info('No main database found for migration, starting fresh');
+      return;
+    }
+    
+    logger.info(`Migrating data from ${mainDbPath} to ${currentDbPath}`);
+    
+    try {
+      // Copy the main database file to the new location
+      fs.copyFileSync(mainDbPath, currentDbPath);
+      logger.info('Database migration completed successfully');
+    } catch (error) {
+      logger.error('Failed to migrate database:', error);
+      // Continue without migration - start fresh
     }
   }
 
@@ -73,27 +113,6 @@ export class Database {
         FOREIGN KEY (user_id) REFERENCES users(user_id)
       )`,
       
-      `CREATE TABLE IF NOT EXISTS redeemable_roles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        guild_id TEXT NOT NULL,
-        role_id TEXT NOT NULL,
-        role_name TEXT NOT NULL,
-        role_type TEXT NOT NULL CHECK(role_type IN ('band', 'team')),
-        description TEXT,
-        is_active BOOLEAN DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(guild_id, role_id)
-      )`,
-      
-      `CREATE TABLE IF NOT EXISTS user_roles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        guild_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        role_id TEXT NOT NULL,
-        redeemed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(user_id),
-        UNIQUE(guild_id, user_id, role_id)
-      )`,
       
       `CREATE TABLE IF NOT EXISTS clickup_users (
         user_id TEXT PRIMARY KEY,
@@ -132,8 +151,6 @@ export class Database {
       'CREATE INDEX IF NOT EXISTS idx_user_id ON game_stats(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_game_type ON game_stats(game_type)',
       'CREATE INDEX IF NOT EXISTS idx_channel_id ON active_games(channel_id)',
-      'CREATE INDEX IF NOT EXISTS idx_role_type ON redeemable_roles(role_type)',
-      'CREATE INDEX IF NOT EXISTS idx_user_roles ON user_roles(user_id)',
       'CREATE INDEX IF NOT EXISTS idx_clickup_email ON clickup_users(email)',
       'CREATE INDEX IF NOT EXISTS idx_task_due_date ON clickup_tasks_cache(due_date)',
     ];
@@ -237,79 +254,6 @@ export class Database {
     );
   }
 
-  async getRedeemableRoles(guildId: string, type?: 'band' | 'team'): Promise<any[]> {
-    if (type) {
-      return await this.all(
-        'SELECT * FROM redeemable_roles WHERE guild_id = ? AND role_type = ? AND is_active = 1',
-        [guildId, type]
-      );
-    }
-    return await this.all('SELECT * FROM redeemable_roles WHERE guild_id = ? AND is_active = 1', [guildId]);
-  }
-
-  async getRedeemableRole(guildId: string, roleId: string): Promise<any | null> {
-    return await this.get('SELECT * FROM redeemable_roles WHERE guild_id = ? AND role_id = ?', [guildId, roleId]);
-  }
-
-  async addRedeemableRole(guildId: string, roleId: string, roleName: string, roleType: 'band' | 'team', description?: string): Promise<void> {
-    await this.run(
-      'INSERT INTO redeemable_roles (guild_id, role_id, role_name, role_type, description) VALUES (?, ?, ?, ?, ?)',
-      [guildId, roleId, roleName, roleType, description]
-    );
-  }
-
-  async removeRedeemableRole(guildId: string, roleId: string): Promise<void> {
-    await this.run(
-      'UPDATE redeemable_roles SET is_active = 0 WHERE guild_id = ? AND role_id = ?',
-      [guildId, roleId]
-    );
-  }
-
-  async reactivateRedeemableRole(guildId: string, roleId: string, description?: string): Promise<void> {
-    if (description !== undefined) {
-      await this.run(
-        'UPDATE redeemable_roles SET is_active = 1, description = ? WHERE guild_id = ? AND role_id = ?',
-        [description, guildId, roleId]
-      );
-    } else {
-      await this.run(
-        'UPDATE redeemable_roles SET is_active = 1 WHERE guild_id = ? AND role_id = ?',
-        [guildId, roleId]
-      );
-    }
-  }
-
-  async getUserRoles(guildId: string, userId: string): Promise<any[]> {
-    return await this.all(
-      `SELECT r.* FROM redeemable_roles r 
-       JOIN user_roles ur ON r.role_id = ur.role_id AND r.guild_id = ur.guild_id
-       WHERE ur.guild_id = ? AND ur.user_id = ?`,
-      [guildId, userId]
-    );
-  }
-
-  async redeemRole(guildId: string, userId: string, roleId: string): Promise<boolean> {
-    try {
-      await this.run(
-        'INSERT INTO user_roles (guild_id, user_id, role_id) VALUES (?, ?, ?)',
-        [guildId, userId, roleId]
-      );
-      return true;
-    } catch (error: any) {
-      if (error.code === 'SQLITE_CONSTRAINT') {
-        return false;
-      }
-      throw error;
-    }
-  }
-
-  async hasRole(guildId: string, userId: string, roleId: string): Promise<boolean> {
-    const result = await this.get(
-      'SELECT 1 FROM user_roles WHERE guild_id = ? AND user_id = ? AND role_id = ?',
-      [guildId, userId, roleId]
-    );
-    return !!result;
-  }
 
   async getClickUpUser(userId: string): Promise<any | null> {
     return await this.get('SELECT * FROM clickup_users WHERE user_id = ?', [userId]);
@@ -335,6 +279,11 @@ export class Database {
     );
   }
 
+  async unlinkClickUpAccount(userId: string): Promise<void> {
+    await this.run('DELETE FROM clickup_users WHERE user_id = ?', [userId]);
+    await this.run('DELETE FROM clickup_tasks_cache WHERE user_id = ?', [userId]);
+  }
+
   async cacheClickUpTasks(userId: string, tasks: any[]): Promise<void> {
     await this.run('DELETE FROM clickup_tasks_cache WHERE user_id = ?', [userId]);
     
@@ -358,6 +307,49 @@ export class Database {
        AND due_date BETWEEN datetime('now') AND datetime(?)
        ORDER BY due_date ASC`,
       [userId, futureDate.toISOString()]
+    );
+  }
+
+  async setUserReminder(userId: string, channelId: string, reminderTime: string): Promise<void> {
+    await this.run(
+      `INSERT OR REPLACE INTO user_reminders 
+       (user_id, channel_id, reminder_time, is_enabled) 
+       VALUES (?, ?, ?, 1)`,
+      [userId, channelId, reminderTime]
+    );
+  }
+
+  async disableUserReminder(userId: string): Promise<void> {
+    await this.run(
+      'UPDATE user_reminders SET is_enabled = 0 WHERE user_id = ?',
+      [userId]
+    );
+  }
+
+  async getUserReminder(userId: string): Promise<any | null> {
+    return await this.get(
+      'SELECT * FROM user_reminders WHERE user_id = ?',
+      [userId]
+    );
+  }
+
+  async getAllEnabledReminders(): Promise<any[]> {
+    return await this.all(
+      'SELECT * FROM user_reminders WHERE is_enabled = 1'
+    );
+  }
+
+  async updateReminderProcessedTime(userId: string): Promise<void> {
+    await this.run(
+      'UPDATE user_reminders SET last_processed = datetime("now") WHERE user_id = ?',
+      [userId]
+    );
+  }
+
+  async updateReminderLastSent(userId: string): Promise<void> {
+    await this.run(
+      'UPDATE user_reminders SET last_sent = date("now") WHERE user_id = ?',
+      [userId]
     );
   }
 

@@ -1,9 +1,10 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ChannelType } from 'discord.js';
-import { Command } from '../../types';
+import { BotCommand, CommandCategory } from '../../types';
 import { database } from '../../services/database';
 import { logger } from '../../utils/logger';
 
-const command: Command = {
+const command: BotCommand = {
+  category: CommandCategory.Utility,
   data: new SlashCommandBuilder()
     .setName('reminder')
     .setDescription('Set up daily ClickUp task reminders')
@@ -60,12 +61,7 @@ const command: Command = {
             return;
           }
 
-          await database.run(
-            `INSERT OR REPLACE INTO user_reminders 
-             (user_id, channel_id, reminder_time, is_enabled) 
-             VALUES (?, ?, ?, 1)`,
-            [userId, channel!.id, timeStr]
-          );
+          await database.setUserReminder(userId, channel!.id, timeStr);
 
           const embed = new EmbedBuilder()
             .setTitle('✅ Reminder Enabled')
@@ -82,10 +78,7 @@ const command: Command = {
         }
 
         case 'disable': {
-          await database.run(
-            'UPDATE user_reminders SET is_enabled = 0 WHERE user_id = ?',
-            [userId]
-          );
+          await database.disableUserReminder(userId);
 
           const embed = new EmbedBuilder()
             .setTitle('✅ Reminder Disabled')
@@ -97,10 +90,7 @@ const command: Command = {
         }
 
         case 'status': {
-          const reminder = await database.get(
-            'SELECT * FROM user_reminders WHERE user_id = ?',
-            [userId]
-          );
+          const reminder = await database.getUserReminder(userId);
 
           if (!reminder || !reminder.is_enabled) {
             await interaction.editReply({

@@ -13,7 +13,7 @@ async function registerCommands() {
     
     // Load commands
     const commandHandler = new CommandHandler();
-    const commands = await commandHandler.loadCommandsForRegistration();
+    let commands = await commandHandler.loadCommandsForRegistration();
     
     if (commands.length === 0) {
       logger.error('No commands found to register!');
@@ -33,6 +33,22 @@ async function registerCommands() {
       // Register commands globally (takes up to 1 hour to propagate)
       logger.info('Registering commands globally...');
       logger.warn('Note: Global command updates can take up to 1 hour to propagate!');
+      
+      // Get existing commands to preserve Entry Point commands
+      const existingCommands = await rest.get(Routes.applicationCommands(config.clientId)) as any[];
+      const entryPointCommands = existingCommands.filter(cmd => {
+        return cmd.handler === 1 || cmd.handler === 2 || 
+               (cmd.integration_types && cmd.integration_types.includes(1));
+      });
+      
+      if (entryPointCommands.length > 0) {
+        entryPointCommands.forEach(entryPointCommand => {
+          logger.info(`Found Entry Point command: ${entryPointCommand.name}, preserving it`);
+          // Remove our version of the command if it exists
+          commands = commands.filter(cmd => cmd.name !== entryPointCommand.name);
+          commands.push(entryPointCommand);
+        });
+      }
       
       const data = await rest.put(
         Routes.applicationCommands(config.clientId),

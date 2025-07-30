@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Activity...</title>
+    <style>
+        body {
+            background-color: #2b2d31;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .game-selector {
+            text-align: center;
+            background: #1e1f22;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        .game-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        .game-button {
+            background-color: #5865f2;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .game-button:hover {
+            background-color: #4752c4;
+        }
+        .game-icon {
+            font-size: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-selector">
+        <h2>Select a Game</h2>
+        <div class="game-buttons">
+            <button class="game-button" data-game="snake">
+                <span class="game-icon">🐍</span>
+                <span>Snake</span>
+            </button>
+            <button class="game-button" data-game="2048">
+                <span class="game-icon">🎮</span>
+                <span>2048</span>
+            </button>
+            <button class="game-button" data-game="doom">
+                <span class="game-icon">🔫</span>
+                <span>DOOM</span>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function loadGame(game) {
+            const gameMap = {
+                'snake': '/games/snake-embed.html',
+                '2048': '/games/2048-embed.html',
+                'doom': '/games/doom-embed.html'
+            };
+            
+            const gameUrl = gameMap[game] || gameMap['snake'];
+            window.location.replace(gameUrl);
+        }
+        
+        // Add event listeners to buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.game-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const game = this.getAttribute('data-game');
+                    loadGame(game);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

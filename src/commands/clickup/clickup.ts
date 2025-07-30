@@ -1,10 +1,9 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { Command } from '../../types';
+import { BotCommand, CommandCategory } from '../../types';
 import { database } from '../../services/database';
-import { clickupService } from '../../services/clickupService';
-import { logger } from '../../utils/logger';
 
-const command: Command = {
+const command: BotCommand = {
+  category: CommandCategory.Utility,
   data: new SlashCommandBuilder()
     .setName('clickup')
     .setDescription('Manage your ClickUp integration')
@@ -26,18 +25,6 @@ const command: Command = {
     const userId = interaction.user.id;
 
     if (subcommand === 'link') {
-      const userRoles = await database.getUserRoles(userId);
-      const hasBandRole = userRoles.some(r => r.role_type === 'band');
-      const hasTeamRole = userRoles.some(r => r.role_type === 'team');
-
-      if (!hasBandRole && !hasTeamRole) {
-        await interaction.reply({
-          content: '❌ You need to redeem at least one role (band or team) before linking ClickUp. Use `/redeem` first!',
-          ephemeral: true
-        });
-        return;
-      }
-
       const embed = new EmbedBuilder()
         .setTitle('🔗 Link ClickUp Account')
         .setDescription('To link your ClickUp account, I\'ll need some information:')
@@ -106,8 +93,7 @@ const command: Command = {
         return;
       }
 
-      await database.run('DELETE FROM clickup_users WHERE user_id = ?', [userId]);
-      await database.run('DELETE FROM clickup_tasks_cache WHERE user_id = ?', [userId]);
+      await database.unlinkClickUpAccount(userId);
 
       const embed = new EmbedBuilder()
         .setTitle('✅ ClickUp Unlinked')

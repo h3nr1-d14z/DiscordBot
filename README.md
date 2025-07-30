@@ -4,12 +4,11 @@ A feature-rich Discord bot with games, fun commands, and interactive features.
 
 ## Features
 
-- 🎮 **Games**: Tic-Tac-Toe, Connect Four, DOOM (text-based), Trivia, and more
+- 🎮 **Games**: 2048, Word Chain, Hangman, Memory Match, Tic-Tac-Toe, Connect Four, DOOM, and more
 - 🎉 **Fun Commands**: 8ball, jokes, memes, ASCII art
 - 💰 **Economy System**: Virtual currency, daily rewards, shop
 - 📊 **Leveling System**: XP and levels based on activity
 - 🎁 **Interactive**: Polls, giveaways, and more
-- 🎭 **Role Management**: Band and team role redemption system
 - 📋 **ClickUp Integration**: Task management, reminders, and productivity features
 - 🎵 **Music**: Play music from YouTube (requires additional setup)
 
@@ -86,8 +85,12 @@ Edit `.env` file:
 - `/tictactoe` - Play Tic-Tac-Toe against bot or another player
 - `/connect4` - Strategic board game
 - `/doom` - Text-based DOOM dungeon crawler
-- `/trivia` - Play trivia quiz (coming soon)
-- `/rps` - Rock Paper Scissors (coming soon)
+- `/2048` - Classic 2048 puzzle game with solo and challenge modes
+- `/wordchain` - Multiplayer word chain game (2-4 players)
+- `/hangman` - Guess the word with solo and challenge modes
+- `/memory` - Memory match card game with different difficulties
+- `/rps` - Rock Paper Scissors
+- `/trivia` - Play trivia quiz
 
 ### Fun
 - `/8ball` - Ask the magic 8-ball

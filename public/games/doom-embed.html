@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOOM WebGL FPS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            cursor: none;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 800px;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: optimizeSpeed;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+            image-rendering: pixelated;
+        }
+        
+        #hud {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.8), #000);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 20px;
+            color: #ff0;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+        
+        .hud-section {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .hud-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 80px;
+        }
+        
+        .hud-value {
+            font-size: 36px;
+            color: #fff;
+            letter-spacing: 2px;
+        }
+        
+        .hud-label {
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        
+        #health-value {
+            color: #0f0;
+        }
+        
+        #health-value.low {
+            color: #f00;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            50% { opacity: 0.5; }
+        }
+        
+        #armor-value {
+            color: #00f;
+        }
+        
+        #ammo-value {
+            color: #ff0;
+        }
+        
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        #crosshair::before,
+        #crosshair::after {
+            content: '';
+            position: absolute;
+            background: #0f0;
+            box-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+        }
+        
+        #crosshair::before {
+            width: 30px;
+            height: 2px;
+            top: 14px;
+            left: 0;
+        }
+        
+        #crosshair::after {
+            width: 2px;
+            height: 30px;
+            top: 0;
+            left: 14px;
+        }
+        
+        #gun {
+            position: absolute;
+            bottom: -20px;
+            right: 20%;
+            width: 300px;
+            height: 300px;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #8B0000;
+            padding: 15px;
+            font-size: 14px;
+            border-radius: 5px;
+            transition: opacity 0.3s;
+        }
+        
+        #controls.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(139, 0, 0, 0.95);
+            border: 3px solid #ff0;
+            padding: 40px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+        }
+        
+        #game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff0;
+            text-shadow: 3px 3px 6px #000;
+        }
+        
+        #game-over p {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        
+        #restart-btn {
+            background: #8B0000;
+            color: #fff;
+            border: 2px solid #ff0;
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 20px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        #restart-btn:hover {
+            background: #ff0;
+            color: #000;
+            transform: scale(1.1);
+        }
+        
+        #minimap {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            border: 2px solid #444;
+            background: rgba(0, 0, 0, 0.7);
+            opacity: 0.8;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #ff0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <canvas id="minimap" width="150" height="150"></canvas>
+        
+        <div id="crosshair"></div>
+        
+        <canvas id="gun" width="300" height="300"></canvas>
+        
+        <div id="controls">
+            <strong>CONTROLS:</strong><br>
+            WASD / Arrow Keys - Move<br>
+            Mouse - Look around<br>
+            Left Click - Fire<br>
+            Shift - Run<br>
+            Space - Jump<br>
+            Tab - Toggle minimap<br>
+            ESC - Lock/Unlock cursor
+        </div>
+        
+        <div id="hud">
+            <div class="hud-section">
+                <div class="hud-item">
+                    <span class="hud-label">HEALTH</span>
+                    <span class="hud-value" id="health-value">100</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">ARMOR</span>
+                    <span class="hud-value" id="armor-value">0</span>
+                </div>
+            </div>
+            <div class="hud-section">
+                <div class="hud-item">
+                    <span class="hud-label">AMMO</span>
+                    <span class="hud-value" id="ammo-value">50</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">SCORE</span>
+                    <span class="hud-value" id="score">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="game-over">
+            <h2>YOU DIED</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Demons Killed: <span id="demons-killed">0</span></p>
+            <p>Time Survived: <span id="time-survived">0</span>s</p>
+            <button id="restart-btn">RESTART</button>
+        </div>
+        
+        <div id="loading">Loading DOOM...</div>
+    </div>
+
+    <script>
+        // Enhanced FPS Game Engine
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimap');
+        const minimapCtx = minimapCanvas.getContext('2d');
+        const gunCanvas = document.getElementById('gun');
+        const gunCtx = gunCanvas.getContext('2d');
+        
+        // Set canvas resolution
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Constants
+        const FOV = Math.PI / 2.5; // 72 degrees
+        const HALF_FOV = FOV / 2;
+        const NUM_RAYS = Math.floor(canvas.width / 2);
+        const MAX_DEPTH = 1200;
+        const DELTA_ANGLE = FOV / NUM_RAYS;
+        const SCALE = canvas.width / NUM_RAYS;
+        const CELL_SIZE = 64;
+        const WALL_HEIGHT = 64;
+        
+        // Advanced game state
+        let gameRunning = false;
+        let gameTime = 0;
+        let lastTime = 0;
+        let deltaTime = 0;
+        let fps = 0;
+        let frameCount = 0;
+        let lastFpsUpdate = 0;
+        
+        let player = {
+            x: 200,
+            y: 200,
+            z: 32,
+            angle: 0,
+            pitch: 0,
+            health: 100,
+            armor: 0,
+            ammo: 50,
+            score: 0,
+            kills: 0,
+            speed: 150,
+            jumpVelocity: 0,
+            isJumping: false,
+            bobAmount: 0,
+            shootAnimation: 0,
+            hurtAnimation: 0
+        };
+        
+        let keys = {};
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseLocked = false;
+        let showMinimap = true;
+        
+        // Game entities
+        let enemies = [];
+        let projectiles = [];
+        let particles = [];
+        let items = [];
+        let explosions = [];
+        
+        // Enhanced map with different wall types
+        const MAP_WIDTH = 32;
+        const MAP_HEIGHT = 32;
+        let map = [];
+        
+        // Wall textures (procedurally generated)
+        const wallColors = [
+            null, // 0 = empty
+            { r: 139, g: 69, b: 19 },   // 1 = brown wall
+            { r: 128, g: 128, b: 128 }, // 2 = gray wall
+            { r: 64, g: 64, b: 64 },    // 3 = dark gray wall
+            { r: 139, g: 0, b: 0 },     // 4 = red wall
+            { r: 0, g: 100, b: 0 }      // 5 = green wall
+        ];
+        
+        // Generate map
+        function generateMap() {
+            // Initialize empty map
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                map[y] = [];
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    map[y][x] = 0;
+                }
+            }
+            
+            // Add border walls
+            for (let x = 0; x < MAP_WIDTH; x++) {
+                map[0][x] = 1;
+                map[MAP_HEIGHT - 1][x] = 1;
+            }
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                map[y][0] = 1;
+                map[y][MAP_WIDTH - 1] = 1;
+            }
+            
+            // Generate rooms
+            const numRooms = 8 + Math.floor(Math.random() * 5);
+            for (let i = 0; i < numRooms; i++) {
+                const roomWidth = 4 + Math.floor(Math.random() * 6);
+                const roomHeight = 4 + Math.floor(Math.random() * 6);
+                const roomX = 2 + Math.floor(Math.random() * (MAP_WIDTH - roomWidth - 4));
+                const roomY = 2 + Math.floor(Math.random() * (MAP_HEIGHT - roomHeight - 4));
+                const wallType = 1 + Math.floor(Math.random() * 5);
+                
+                // Create room walls
+                for (let x = roomX; x < roomX + roomWidth; x++) {
+                    map[roomY][x] = wallType;
+                    map[roomY + roomHeight - 1][x] = wallType;
+                }
+                for (let y = roomY; y < roomY + roomHeight; y++) {
+                    map[y][roomX] = wallType;
+                    map[y][roomX + roomWidth - 1] = wallType;
+                }
+                
+                // Add door
+                const doorSide = Math.floor(Math.random() * 4);
+                if (doorSide === 0) map[roomY][roomX + Math.floor(roomWidth / 2)] = 0;
+                else if (doorSide === 1) map[roomY + roomHeight - 1][roomX + Math.floor(roomWidth / 2)] = 0;
+                else if (doorSide === 2) map[roomY + Math.floor(roomHeight / 2)][roomX] = 0;
+                else map[roomY + Math.floor(roomHeight / 2)][roomX + roomWidth - 1] = 0;
+            }
+            
+            // Add some pillars
+            for (let i = 0; i < 20; i++) {
+                const x = 2 + Math.floor(Math.random() * (MAP_WIDTH - 4));
+                const y = 2 + Math.floor(Math.random() * (MAP_HEIGHT - 4));
+                if (map[y][x] === 0) {
+                    map[y][x] = 3;
+                }
+            }
+        }
+        
+        // Enhanced enemy class
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.z = 32;
+                this.health = 60;
+                this.maxHealth = 60;
+                this.speed = 80;
+                this.size = 30;
+                this.lastShot = 0;
+                this.angle = 0;
+                this.type = Math.random() < 0.5 ? 'imp' : 'demon';
+                this.color = this.type === 'imp' ? '#ff4444' : '#ff8800';
+                this.damage = this.type === 'imp' ? 10 : 15;
+                this.fireRate = this.type === 'imp' ? 2000 : 2500;
+                this.state = 'idle';
+                this.stateTime = 0;
+                this.painTime = 0;
+                this.deathAnimation = 0;
+            }
+            
+            update(dt) {
+                if (this.health <= 0) {
+                    this.deathAnimation += dt * 5;
+                    if (this.deathAnimation > 1) {
+                        return false; // Remove enemy
+                    }
+                    return true;
+                }
+                
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                this.angle = Math.atan2(dy, dx);
+                
+                // AI behavior
+                if (dist > 600) {
+                    this.state = 'idle';
+                } else if (dist > 150) {
+                    this.state = 'chase';
+                    // Move towards player
+                    const moveX = Math.cos(this.angle) * this.speed * dt;
+                    const moveY = Math.sin(this.angle) * this.speed * dt;
+                    
+                    // Check collision
+                    const newX = this.x + moveX;
+                    const newY = this.y + moveY;
+                    
+                    if (!checkWallCollision(newX, this.y, this.size)) {
+                        this.x = newX;
+                    }
+                    if (!checkWallCollision(this.x, newY, this.size)) {
+                        this.y = newY;
+                    }
+                } else {
+                    this.state = 'attack';
+                }
+                
+                // Shoot at player
+                if (this.state === 'attack' && Date.now() - this.lastShot > this.fireRate && dist < 400) {
+                    this.lastShot = Date.now();
+                    
+                    // Add some inaccuracy
+                    const spread = 0.1;
+                    const shootAngle = this.angle + (Math.random() - 0.5) * spread;
+                    
+                    projectiles.push({
+                        x: this.x,
+                        y: this.y,
+                        z: this.z,
+                        angle: shootAngle,
+                        speed: 300,
+                        enemy: true,
+                        damage: this.damage,
+                        color: '#ff00ff',
+                        size: 4
+                    });
+                    
+                    // Muzzle flash
+                    createParticles(this.x, this.y, this.z, '#ff00ff', 5);
+                }
+                
+                // Update pain animation
+                if (this.painTime > 0) {
+                    this.painTime -= dt;
+                }
+                
+                return true;
+            }
+            
+            takeDamage(damage) {
+                this.health -= damage;
+                this.painTime = 0.2;
+                
+                // Blood particles
+                createParticles(this.x, this.y, this.z, '#ff0000', 10);
+                
+                if (this.health <= 0) {
+                    player.score += this.type === 'imp' ? 100 : 150;
+                    player.kills++;
+                    
+                    // Death explosion
+                    createExplosion(this.x, this.y, this.z);
+                    
+                    // Chance to drop item
+                    if (Math.random() < 0.3) {
+                        dropItem(this.x, this.y);
+                    }
+                }
+            }
+        }
+        
+        // Particle system
+        function createParticles(x, y, z, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    z: z,
+                    vx: (Math.random() - 0.5) * 200,
+                    vy: (Math.random() - 0.5) * 200,
+                    vz: Math.random() * 100,
+                    color: color,
+                    life: 1,
+                    size: 2 + Math.random() * 4
+                });
+            }
+        }
+        
+        function createExplosion(x, y, z) {
+            explosions.push({
+                x: x,
+                y: y,
+                z: z,
+                radius: 10,
+                maxRadius: 60,
+                life: 1
+            });
+            
+            // Explosion particles
+            createParticles(x, y, z, '#ff6600', 20);
+            createParticles(x, y, z, '#ffaa00', 15);
+        }
+        
+        // Item drops
+        function dropItem(x, y) {
+            const itemType = Math.random();
+            let item;
+            
+            if (itemType < 0.4) {
+                item = { type: 'ammo', value: 10, color: '#ffff00' };
+            } else if (itemType < 0.7) {
+                item = { type: 'health', value: 25, color: '#00ff00' };
+            } else {
+                item = { type: 'armor', value: 25, color: '#0066ff' };
+            }
+            
+            items.push({
+                x: x,
+                y: y,
+                z: 16,
+                ...item,
+                bobOffset: Math.random() * Math.PI * 2
+            });
+        }
+        
+        // Enhanced raycasting with floor and ceiling
+        function castRays() {
+            for (let ray = 0; ray < NUM_RAYS; ray++) {
+                const rayAngle = player.angle - HALF_FOV + ray * DELTA_ANGLE;
+                
+                // Cast ray
+                let distance = 0;
+                let hitWall = false;
+                let wallType = 0;
+                let wallX = 0;
+                let wallY = 0;
+                let textureX = 0;
+                
+                const cos = Math.cos(rayAngle);
+                const sin = Math.sin(rayAngle);
+                
+                // Ray marching
+                while (!hitWall && distance < MAX_DEPTH) {
+                    distance += 2;
+                    const x = player.x + cos * distance;
+                    const y = player.y + sin * distance;
+                    
+                    // Check if hit wall
+                    const gridX = Math.floor(x / CELL_SIZE);
+                    const gridY = Math.floor(y / CELL_SIZE);
+                    
+                    if (gridX < 0 || gridX >= MAP_WIDTH || 
+                        gridY < 0 || gridY >= MAP_HEIGHT) {
+                        hitWall = true;
+                        wallType = 1;
+                    } else if (map[gridY][gridX] !== 0) {
+                        hitWall = true;
+                        wallType = map[gridY][gridX];
+                        wallX = x;
+                        wallY = y;
+                        
+                        // Calculate texture coordinate
+                        const blockX = x - gridX * CELL_SIZE;
+                        const blockY = y - gridY * CELL_SIZE;
+                        
+                        if (Math.abs(blockX - CELL_SIZE) < 2 || Math.abs(blockX) < 2) {
+                            textureX = blockY / CELL_SIZE;
+                        } else {
+                            textureX = blockX / CELL_SIZE;
+                        }
+                    }
+                }
+                
+                // Fix fish-eye effect
+                distance = distance * Math.cos(rayAngle - player.angle);
+                
+                // Calculate wall height with pitch
+                const wallHeight = (WALL_HEIGHT * canvas.height) / (distance + 0.0001);
+                const wallTop = (canvas.height - wallHeight) / 2 + player.pitch * 2 + player.z - 32;
+                const wallBottom = wallTop + wallHeight;
+                
+                // Draw floor and ceiling with gradient
+                const x = ray * SCALE;
+                
+                // Ceiling gradient
+                const ceilingGradient = ctx.createLinearGradient(0, 0, 0, wallTop);
+                ceilingGradient.addColorStop(0, '#000000');
+                ceilingGradient.addColorStop(1, '#1a1a1a');
+                ctx.fillStyle = ceilingGradient;
+                ctx.fillRect(x, 0, SCALE + 1, wallTop);
+                
+                // Floor gradient
+                const floorGradient = ctx.createLinearGradient(0, wallBottom, 0, canvas.height);
+                floorGradient.addColorStop(0, '#2a2a2a');
+                floorGradient.addColorStop(1, '#1a1a1a');
+                ctx.fillStyle = floorGradient;
+                ctx.fillRect(x, wallBottom, SCALE + 1, canvas.height - wallBottom);
+                
+                // Draw wall with texture
+                if (hitWall && wallType > 0) {
+                    const wallColor = wallColors[wallType];
+                    const brightness = Math.max(0.2, 1 - (distance / MAX_DEPTH));
+                    
+                    // Add texture variation
+                    const textureVariation = Math.sin(textureX * Math.PI * 8) * 0.1 + 0.9;
+                    
+                    const r = Math.floor(wallColor.r * brightness * textureVariation);
+                    const g = Math.floor(wallColor.g * brightness * textureVariation);
+                    const b = Math.floor(wallColor.b * brightness * textureVariation);
+                    
+                    // Draw wall with shading
+                    const wallGradient = ctx.createLinearGradient(0, wallTop, 0, wallBottom);
+                    wallGradient.addColorStop(0, `rgb(${Math.floor(r * 0.8)}, ${Math.floor(g * 0.8)}, ${Math.floor(b * 0.8)})`);
+                    wallGradient.addColorStop(0.5, `rgb(${r}, ${g}, ${b})`);
+                    wallGradient.addColorStop(1, `rgb(${Math.floor(r * 0.8)}, ${Math.floor(g * 0.8)}, ${Math.floor(b * 0.8)})`);
+                    
+                    ctx.fillStyle = wallGradient;
+                    ctx.fillRect(x, wallTop, SCALE + 1, wallHeight);
+                    
+                    // Add edge highlighting
+                    if (textureX < 0.05 || textureX > 0.95) {
+                        ctx.fillStyle = `rgba(0, 0, 0, 0.3)`;
+                        ctx.fillRect(x, wallTop, SCALE + 1, wallHeight);
+                    }
+                }
+            }
+        }
+        
+        // Draw 3D sprites (enemies, items, particles)
+        function drawSprites() {
+            // Collect all sprites
+            const sprites = [];
+            
+            // Add enemies
+            enemies.forEach(enemy => {
+                const dx = enemy.x - player.x;
+                const dy = enemy.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                sprites.push({
+                    type: 'enemy',
+                    obj: enemy,
+                    x: enemy.x,
+                    y: enemy.y,
+                    z: enemy.z,
+                    distance: distance
+                });
+            });
+            
+            // Add items
+            items.forEach(item => {
+                const dx = item.x - player.x;
+                const dy = item.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                sprites.push({
+                    type: 'item',
+                    obj: item,
+                    x: item.x,
+                    y: item.y,
+                    z: item.z,
+                    distance: distance
+                });
+            });
+            
+            // Add projectiles
+            projectiles.forEach(proj => {
+                const dx = proj.x - player.x;
+                const dy = proj.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                sprites.push({
+                    type: 'projectile',
+                    obj: proj,
+                    x: proj.x,
+                    y: proj.y,
+                    z: proj.z,
+                    distance: distance
+                });
+            });
+            
+            // Add particles
+            particles.forEach(particle => {
+                const dx = particle.x - player.x;
+                const dy = particle.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                sprites.push({
+                    type: 'particle',
+                    obj: particle,
+                    x: particle.x,
+                    y: particle.y,
+                    z: particle.z,
+                    distance: distance
+                });
+            });
+            
+            // Add explosions
+            explosions.forEach(explosion => {
+                const dx = explosion.x - player.x;
+                const dy = explosion.y - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                sprites.push({
+                    type: 'explosion',
+                    obj: explosion,
+                    x: explosion.x,
+                    y: explosion.y,
+                    z: explosion.z,
+                    distance: distance
+                });
+            });
+            
+            // Sort by distance (far to near)
+            sprites.sort((a, b) => b.distance - a.distance);
+            
+            // Draw sprites
+            sprites.forEach(sprite => {
+                const dx = sprite.x - player.x;
+                const dy = sprite.y - player.y;
+                
+                // Calculate angle to sprite
+                let angleToSprite = Math.atan2(dy, dx) - player.angle;
+                
+                // Normalize angle
+                while (angleToSprite > Math.PI) angleToSprite -= 2 * Math.PI;
+                while (angleToSprite < -Math.PI) angleToSprite += 2 * Math.PI;
+                
+                // Check if sprite is in FOV
+                if (Math.abs(angleToSprite) < HALF_FOV + 0.2) {
+                    // Calculate screen position
+                    const screenX = (angleToSprite + HALF_FOV) * (canvas.width / FOV);
+                    const spriteHeight = (WALL_HEIGHT * canvas.height) / (sprite.distance + 0.0001);
+                    const spriteTop = (canvas.height - spriteHeight) / 2 + player.pitch * 2 + (player.z - sprite.z) * (canvas.height / sprite.distance);
+                    
+                    // Draw based on type
+                    if (sprite.type === 'enemy') {
+                        drawEnemy(sprite.obj, screenX, spriteTop, spriteHeight);
+                    } else if (sprite.type === 'item') {
+                        drawItem(sprite.obj, screenX, spriteTop, spriteHeight);
+                    } else if (sprite.type === 'projectile') {
+                        drawProjectile(sprite.obj, screenX, spriteTop, spriteHeight);
+                    } else if (sprite.type === 'particle') {
+                        drawParticle(sprite.obj, screenX, spriteTop, spriteHeight);
+                    } else if (sprite.type === 'explosion') {
+                        drawExplosion(sprite.obj, screenX, spriteTop, spriteHeight);
+                    }
+                }
+            });
+        }
+        
+        // Sprite drawing functions
+        function drawEnemy(enemy, x, y, size) {
+            if (enemy.health <= 0) {
+                // Death animation
+                ctx.globalAlpha = 1 - enemy.deathAnimation;
+                size *= 1 - enemy.deathAnimation * 0.5;
+            }
+            
+            // Pain flash
+            if (enemy.painTime > 0) {
+                ctx.fillStyle = '#ffffff';
+            } else {
+                ctx.fillStyle = enemy.color;
+            }
+            
+            // Draw enemy body
+            const width = size * 0.8;
+            const height = size;
+            
+            // Body
+            ctx.fillRect(x - width/2, y, width, height);
+            
+            // Head
+            const headSize = width * 0.6;
+            ctx.fillRect(x - headSize/2, y - headSize/2, headSize, headSize);
+            
+            // Eyes
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(x - headSize/3, y - headSize/4, headSize/6, headSize/6);
+            ctx.fillRect(x + headSize/6, y - headSize/4, headSize/6, headSize/6);
+            
+            // Health bar
+            if (enemy.health > 0 && enemy.health < enemy.maxHealth) {
+                const barWidth = width;
+                const barHeight = 4;
+                const barY = y - headSize - 10;
+                
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(x - barWidth/2, barY, barWidth, barHeight);
+                
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(x - barWidth/2, barY, barWidth * (enemy.health / enemy.maxHealth), barHeight);
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawItem(item, x, y, size) {
+            // Bob animation
+            const bob = Math.sin(Date.now() * 0.003 + item.bobOffset) * 5;
+            y += bob;
+            
+            ctx.fillStyle = item.color;
+            ctx.globalAlpha = 0.8;
+            
+            // Draw based on type
+            if (item.type === 'health') {
+                // Health cross
+                const w = size * 0.3;
+                const h = size * 0.6;
+                ctx.fillRect(x - w/2, y, w, h);
+                ctx.fillRect(x - h/2, y + h/3, h, w);
+            } else if (item.type === 'ammo') {
+                // Ammo box
+                ctx.fillRect(x - size/2, y + size/3, size, size/2);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(x - size/4, y + size/3 + 5, size/2, size/4);
+            } else if (item.type === 'armor') {
+                // Armor shield
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - size/2, y + size/3);
+                ctx.lineTo(x - size/3, y + size);
+                ctx.lineTo(x, y + size * 0.8);
+                ctx.lineTo(x + size/3, y + size);
+                ctx.lineTo(x + size/2, y + size/3);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawProjectile(proj, x, y, size) {
+            const projSize = size * 0.1;
+            
+            ctx.fillStyle = proj.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = proj.color;
+            
+            ctx.beginPath();
+            ctx.arc(x, y + size/2, projSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        function drawParticle(particle, x, y, size) {
+            ctx.fillStyle = particle.color;
+            ctx.globalAlpha = particle.life;
+            
+            const particleSize = size * 0.05 * particle.size;
+            ctx.fillRect(x - particleSize/2, y + size/2 - particleSize/2, particleSize, particleSize);
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        function drawExplosion(explosion, x, y, size) {
+            const radius = explosion.radius * (size / 50);
+            
+            ctx.fillStyle = '#ff6600';
+            ctx.globalAlpha = explosion.life * 0.8;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#ff6600';
+            
+            ctx.beginPath();
+            ctx.arc(x, y + size/2, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#ffaa00';
+            ctx.globalAlpha = explosion.life;
+            
+            ctx.beginPath();
+            ctx.arc(x, y + size/2, radius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+            ctx.globalAlpha = 1;
+        }
+        
+        // Enhanced gun drawing
+        function drawGun() {
+            gunCtx.clearRect(0, 0, 300, 300);
+            gunCtx.save();
+            
+            // Weapon sway
+            const swayX = Math.sin(Date.now() * 0.001) * 2;
+            const swayY = Math.cos(Date.now() * 0.0015) * 1;
+            
+            // Shooting recoil
+            const recoil = player.shootAnimation * 20;
+            
+            // Walking bob
+            const bobX = Math.sin(player.bobAmount) * 5;
+            const bobY = Math.abs(Math.cos(player.bobAmount)) * 10;
+            
+            gunCtx.translate(swayX + bobX, swayY + bobY + recoil);
+            
+            // Draw gun
+            // Barrel
+            gunCtx.fillStyle = '#333';
+            gunCtx.fillRect(100, 150, 120, 40);
+            
+            // Body
+            gunCtx.fillStyle = '#222';
+            gunCtx.fillRect(80, 160, 100, 60);
+            
+            // Handle
+            gunCtx.fillStyle = '#111';
+            gunCtx.fillRect(90, 220, 30, 50);
+            
+            // Details
+            gunCtx.fillStyle = '#000';
+            gunCtx.fillRect(90, 165, 80, 5);
+            gunCtx.fillRect(90, 175, 80, 5);
+            gunCtx.fillRect(90, 185, 80, 5);
+            
+            // Sight
+            gunCtx.fillStyle = '#444';
+            gunCtx.fillRect(140, 145, 5, 10);
+            gunCtx.fillRect(200, 145, 5, 10);
+            
+            // Muzzle flash
+            if (player.shootAnimation > 0) {
+                gunCtx.fillStyle = '#ffff00';
+                gunCtx.globalAlpha = player.shootAnimation;
+                gunCtx.beginPath();
+                gunCtx.arc(220, 170, player.shootAnimation * 30, 0, Math.PI * 2);
+                gunCtx.fill();
+                
+                gunCtx.fillStyle = '#ff6600';
+                gunCtx.beginPath();
+                gunCtx.arc(220, 170, player.shootAnimation * 20, 0, Math.PI * 2);
+                gunCtx.fill();
+                
+                gunCtx.globalAlpha = 1;
+            }
+            
+            gunCtx.restore();
+            
+            // Update animations
+            if (player.shootAnimation > 0) {
+                player.shootAnimation -= deltaTime * 5;
+                if (player.shootAnimation < 0) player.shootAnimation = 0;
+            }
+        }
+        
+        // Minimap
+        function drawMinimap() {
+            if (!showMinimap) return;
+            
+            minimapCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            minimapCtx.fillRect(0, 0, 150, 150);
+            
+            const scale = 150 / (MAP_WIDTH * CELL_SIZE);
+            
+            // Draw walls
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    if (map[y][x] !== 0) {
+                        const wallColor = wallColors[map[y][x]];
+                        minimapCtx.fillStyle = `rgb(${wallColor.r}, ${wallColor.g}, ${wallColor.b})`;
+                        minimapCtx.fillRect(
+                            x * CELL_SIZE * scale,
+                            y * CELL_SIZE * scale,
+                            CELL_SIZE * scale,
+                            CELL_SIZE * scale
+                        );
+                    }
+                }
+            }
+            
+            // Draw enemies
+            minimapCtx.fillStyle = '#ff0000';
+            enemies.forEach(enemy => {
+                if (enemy.health > 0) {
+                    minimapCtx.fillRect(
+                        enemy.x * scale - 2,
+                        enemy.y * scale - 2,
+                        4,
+                        4
+                    );
+                }
+            });
+            
+            // Draw items
+            items.forEach(item => {
+                minimapCtx.fillStyle = item.color;
+                minimapCtx.fillRect(
+                    item.x * scale - 1,
+                    item.y * scale - 1,
+                    2,
+                    2
+                );
+            });
+            
+            // Draw player
+            minimapCtx.save();
+            minimapCtx.translate(player.x * scale, player.y * scale);
+            minimapCtx.rotate(player.angle);
+            
+            minimapCtx.fillStyle = '#00ff00';
+            minimapCtx.beginPath();
+            minimapCtx.moveTo(5, 0);
+            minimapCtx.lineTo(-3, -3);
+            minimapCtx.lineTo(-3, 3);
+            minimapCtx.closePath();
+            minimapCtx.fill();
+            
+            minimapCtx.restore();
+            
+            // Draw FOV
+            minimapCtx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+            minimapCtx.beginPath();
+            minimapCtx.moveTo(player.x * scale, player.y * scale);
+            minimapCtx.lineTo(
+                player.x * scale + Math.cos(player.angle - HALF_FOV) * 50,
+                player.y * scale + Math.sin(player.angle - HALF_FOV) * 50
+            );
+            minimapCtx.moveTo(player.x * scale, player.y * scale);
+            minimapCtx.lineTo(
+                player.x * scale + Math.cos(player.angle + HALF_FOV) * 50,
+                player.y * scale + Math.sin(player.angle + HALF_FOV) * 50
+            );
+            minimapCtx.stroke();
+        }
+        
+        // Collision detection
+        function checkWallCollision(x, y, radius) {
+            const gridX1 = Math.floor((x - radius) / CELL_SIZE);
+            const gridX2 = Math.floor((x + radius) / CELL_SIZE);
+            const gridY1 = Math.floor((y - radius) / CELL_SIZE);
+            const gridY2 = Math.floor((y + radius) / CELL_SIZE);
+            
+            for (let gx = gridX1; gx <= gridX2; gx++) {
+                for (let gy = gridY1; gy <= gridY2; gy++) {
+                    if (gx < 0 || gx >= MAP_WIDTH || 
+                        gy < 0 || gy >= MAP_HEIGHT ||
+                        map[gy][gx] !== 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // Input handling
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                showMinimap = !showMinimap;
+            }
+            
+            if (e.key === 'Escape') {
+                if (mouseLocked) {
+                    document.exitPointerLock();
+                } else if (gameRunning) {
+                    canvas.requestPointerLock();
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        document.addEventListener('pointerlockchange', () => {
+            mouseLocked = document.pointerLockElement === canvas;
+            if (mouseLocked) {
+                document.getElementById('controls').classList.add('hidden');
+            } else {
+                document.getElementById('controls').classList.remove('hidden');
+            }
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (mouseLocked) {
+                player.angle += e.movementX * 0.002;
+                player.pitch -= e.movementY * 0.5;
+                player.pitch = Math.max(-200, Math.min(200, player.pitch));
+            }
+        });
+        
+        canvas.addEventListener('click', () => {
+            if (!mouseLocked) {
+                canvas.requestPointerLock();
+                return;
+            }
+            
+            if (player.ammo > 0) {
+                player.ammo--;
+                player.shootAnimation = 1;
+                
+                // Create projectile
+                projectiles.push({
+                    x: player.x,
+                    y: player.y,
+                    z: player.z,
+                    angle: player.angle,
+                    speed: 600,
+                    enemy: false,
+                    damage: 25,
+                    color: '#ffff00',
+                    size: 3
+                });
+                
+                // Muzzle flash
+                createParticles(
+                    player.x + Math.cos(player.angle) * 50,
+                    player.y + Math.sin(player.angle) * 50,
+                    player.z,
+                    '#ffff00',
+                    5
+                );
+                
+                updateHUD();
+            }
+        });
+        
+        // Game update
+        function update(currentTime) {
+            deltaTime = Math.min((currentTime - lastTime) / 1000, 0.1);
+            lastTime = currentTime;
+            
+            if (!gameRunning) return;
+            
+            gameTime += deltaTime;
+            
+            // Update FPS counter
+            frameCount++;
+            if (currentTime - lastFpsUpdate > 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = currentTime;
+            }
+            
+            // Player movement
+            let moveX = 0;
+            let moveY = 0;
+            let moving = false;
+            
+            if (keys['w'] || keys['arrowup']) {
+                moveX += Math.cos(player.angle);
+                moveY += Math.sin(player.angle);
+                moving = true;
+            }
+            if (keys['s'] || keys['arrowdown']) {
+                moveX -= Math.cos(player.angle);
+                moveY -= Math.sin(player.angle);
+                moving = true;
+            }
+            if (keys['a'] || keys['arrowleft']) {
+                moveX += Math.cos(player.angle - Math.PI/2);
+                moveY += Math.sin(player.angle - Math.PI/2);
+                moving = true;
+            }
+            if (keys['d'] || keys['arrowright']) {
+                moveX += Math.cos(player.angle + Math.PI/2);
+                moveY += Math.sin(player.angle + Math.PI/2);
+                moving = true;
+            }
+            
+            // Normalize movement
+            if (moveX !== 0 || moveY !== 0) {
+                const len = Math.sqrt(moveX * moveX + moveY * moveY);
+                moveX /= len;
+                moveY /= len;
+            }
+            
+            // Apply speed
+            const speed = keys['shift'] ? player.speed * 1.5 : player.speed;
+            moveX *= speed * deltaTime;
+            moveY *= speed * deltaTime;
+            
+            // Check collision and move
+            if (!checkWallCollision(player.x + moveX, player.y, 20)) {
+                player.x += moveX;
+            }
+            if (!checkWallCollision(player.x, player.y + moveY, 20)) {
+                player.y += moveY;
+            }
+            
+            // Update walking bob
+            if (moving) {
+                player.bobAmount += deltaTime * 10;
+            } else {
+                player.bobAmount *= 0.9;
+            }
+            
+            // Jumping
+            if (keys[' '] && !player.isJumping) {
+                player.isJumping = true;
+                player.jumpVelocity = 300;
+            }
+            
+            if (player.isJumping) {
+                player.z += player.jumpVelocity * deltaTime;
+                player.jumpVelocity -= 600 * deltaTime;
+                
+                if (player.z <= 32) {
+                    player.z = 32;
+                    player.isJumping = false;
+                    player.jumpVelocity = 0;
+                }
+            }
+            
+            // Update enemies
+            enemies = enemies.filter(enemy => enemy.update(deltaTime));
+            
+            // Update projectiles
+            projectiles = projectiles.filter(proj => {
+                proj.x += Math.cos(proj.angle) * proj.speed * deltaTime;
+                proj.y += Math.sin(proj.angle) * proj.speed * deltaTime;
+                
+                // Check wall collision
+                if (checkWallCollision(proj.x, proj.y, 5)) {
+                    createParticles(proj.x, proj.y, proj.z, '#666666', 5);
+                    return false;
+                }
+                
+                // Check enemy collision
+                if (!proj.enemy) {
+                    for (let enemy of enemies) {
+                        if (enemy.health <= 0) continue;
+                        
+                        const dist = Math.sqrt(
+                            Math.pow(proj.x - enemy.x, 2) + 
+                            Math.pow(proj.y - enemy.y, 2)
+                        );
+                        
+                        if (dist < enemy.size) {
+                            enemy.takeDamage(proj.damage);
+                            updateHUD();
+                            return false;
+                        }
+                    }
+                } else {
+                    // Check player collision
+                    const dist = Math.sqrt(
+                        Math.pow(proj.x - player.x, 2) + 
+                        Math.pow(proj.y - player.y, 2)
+                    );
+                    
+                    if (dist < 30) {
+                        takeDamage(proj.damage);
+                        return false;
+                    }
+                }
+                
+                // Remove if too far
+                return Math.abs(proj.x - player.x) < 2000 && Math.abs(proj.y - player.y) < 2000;
+            });
+            
+            // Update particles
+            particles = particles.filter(particle => {
+                particle.x += particle.vx * deltaTime;
+                particle.y += particle.vy * deltaTime;
+                particle.z += particle.vz * deltaTime;
+                particle.vz -= 200 * deltaTime;
+                particle.life -= deltaTime * 2;
+                
+                return particle.life > 0 && particle.z > 0;
+            });
+            
+            // Update explosions
+            explosions = explosions.filter(explosion => {
+                explosion.radius += (explosion.maxRadius - explosion.radius) * deltaTime * 10;
+                explosion.life -= deltaTime * 3;
+                return explosion.life > 0;
+            });
+            
+            // Check item pickups
+            items = items.filter(item => {
+                const dist = Math.sqrt(
+                    Math.pow(item.x - player.x, 2) + 
+                    Math.pow(item.y - player.y, 2)
+                );
+                
+                if (dist < 40) {
+                    // Pickup item
+                    if (item.type === 'health' && player.health < 100) {
+                        player.health = Math.min(100, player.health + item.value);
+                        updateHUD();
+                        return false;
+                    } else if (item.type === 'armor' && player.armor < 100) {
+                        player.armor = Math.min(100, player.armor + item.value);
+                        updateHUD();
+                        return false;
+                    } else if (item.type === 'ammo') {
+                        player.ammo += item.value;
+                        updateHUD();
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Spawn enemies
+            if (enemies.length < 5 + Math.floor(gameTime / 30)) {
+                spawnEnemy();
+            }
+            
+            // Update hurt animation
+            if (player.hurtAnimation > 0) {
+                player.hurtAnimation -= deltaTime * 3;
+            }
+        }
+        
+        // Take damage
+        function takeDamage(damage) {
+            if (player.armor > 0) {
+                const armorDamage = Math.min(player.armor, damage * 0.7);
+                player.armor -= armorDamage;
+                damage -= armorDamage;
+            }
+            
+            player.health -= damage;
+            player.hurtAnimation = 1;
+            
+            // Blood effect
+            createParticles(player.x, player.y, player.z, '#ff0000', 10);
+            
+            updateHUD();
+            
+            if (player.health <= 0) {
+                gameOver();
+            }
+        }
+        
+        // Spawn enemy
+        function spawnEnemy() {
+            let x, y;
+            let attempts = 0;
+            
+            do {
+                x = CELL_SIZE + Math.random() * (MAP_WIDTH - 2) * CELL_SIZE;
+                y = CELL_SIZE + Math.random() * (MAP_HEIGHT - 2) * CELL_SIZE;
+                attempts++;
+            } while (
+                (checkWallCollision(x, y, 30) ||
+                Math.sqrt(Math.pow(x - player.x, 2) + Math.pow(y - player.y, 2)) < 300) &&
+                attempts < 50
+            );
+            
+            if (attempts < 50) {
+                enemies.push(new Enemy(x, y));
+            }
+        }
+        
+        // Update HUD
+        function updateHUD() {
+            const healthEl = document.getElementById('health-value');
+            healthEl.textContent = Math.max(0, Math.floor(player.health));
+            healthEl.classList.toggle('low', player.health < 30);
+            
+            document.getElementById('armor-value').textContent = Math.floor(player.armor);
+            document.getElementById('ammo-value').textContent = player.ammo;
+            document.getElementById('score').textContent = player.score;
+        }
+        
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('final-score').textContent = player.score;
+            document.getElementById('demons-killed').textContent = player.kills;
+            document.getElementById('time-survived').textContent = Math.floor(gameTime);
+            document.getElementById('game-over').style.display = 'block';
+            document.exitPointerLock();
+        }
+        
+        // Restart
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            player = {
+                x: 200,
+                y: 200,
+                z: 32,
+                angle: 0,
+                pitch: 0,
+                health: 100,
+                armor: 0,
+                ammo: 50,
+                score: 0,
+                kills: 0,
+                speed: 150,
+                jumpVelocity: 0,
+                isJumping: false,
+                bobAmount: 0,
+                shootAnimation: 0,
+                hurtAnimation: 0
+            };
+            
+            enemies = [];
+            projectiles = [];
+            particles = [];
+            items = [];
+            explosions = [];
+            gameTime = 0;
+            
+            generateMap();
+            
+            for (let i = 0; i < 3; i++) {
+                spawnEnemy();
+            }
+            
+            document.getElementById('game-over').style.display = 'none';
+            gameRunning = true;
+            canvas.requestPointerLock();
+            updateHUD();
+        });
+        
+        // Main render function
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Apply hurt effect
+            if (player.hurtAnimation > 0) {
+                ctx.fillStyle = `rgba(255, 0, 0, ${player.hurtAnimation * 0.3})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Render 3D view
+            castRays();
+            drawSprites();
+            
+            // Draw HUD elements
+            drawGun();
+            drawMinimap();
+            
+            // Draw FPS counter
+            ctx.fillStyle = '#0f0';
+            ctx.font = '16px monospace';
+            ctx.fillText(`FPS: ${fps}`, 10, canvas.height - 10);
+        }
+        
+        // Game loop
+        function gameLoop(currentTime) {
+            update(currentTime);
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize game
+        function init() {
+            generateMap();
+            
+            // Find safe spawn point
+            let spawnX, spawnY;
+            do {
+                spawnX = CELL_SIZE * 1.5 + Math.random() * (MAP_WIDTH - 3) * CELL_SIZE;
+                spawnY = CELL_SIZE * 1.5 + Math.random() * (MAP_HEIGHT - 3) * CELL_SIZE;
+            } while (checkWallCollision(spawnX, spawnY, 30));
+            
+            player.x = spawnX;
+            player.y = spawnY;
+            
+            // Spawn initial enemies
+            for (let i = 0; i < 3; i++) {
+                spawnEnemy();
+            }
+            
+            // Drop some initial items
+            for (let i = 0; i < 5; i++) {
+                let x, y;
+                do {
+                    x = CELL_SIZE + Math.random() * (MAP_WIDTH - 2) * CELL_SIZE;
+                    y = CELL_SIZE + Math.random() * (MAP_HEIGHT - 2) * CELL_SIZE;
+                } while (checkWallCollision(x, y, 20));
+                
+                dropItem(x, y);
+            }
+            
+            updateHUD();
+            
+            // Hide loading and start game
+            document.getElementById('loading').style.display = 'none';
+            gameRunning = true;
+            
+            // Request pointer lock after user interaction
+            canvas.addEventListener('click', function initialClick() {
+                canvas.requestPointerLock();
+                canvas.removeEventListener('click', initialClick);
+            });
+            
+            // Start game loop
+            lastTime = performance.now();
+            gameLoop(lastTime);
+        }
+        
+        // Start game when ready
+        window.addEventListener('load', () => {
+            setTimeout(init, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Discord Activity</title>
+    <script>
+        // Get activity type from URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const activity = params.get('activity') || 'test';
+        
+        // Redirect to the appropriate game
+        const gameMap = {
+            'snake': '/games/snake-simple',
+            '2048': '/games/2048',
+            'test': '/games/test'
+        };
+        
+        const gamePath = gameMap[activity] || '/games/test';
+        
+        // If we're in an iframe (Discord activity), redirect
+        if (window.parent !== window) {
+            window.location.href = gamePath;
+        }
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #2b2d31;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        a {
+            color: #5865f2;
+            text-decoration: none;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Discord Bot Games</h1>
+    <p>Loading activity...</p>
+    <div style="margin-top: 40px;">
+        <p>Available games:</p>
+        <a href="/games/snake-simple">Snake</a> |
+        <a href="/games/2048">2048</a> |
+        <a href="/games/test">Test Page</a>
+    </div>
+</body>
+</html>

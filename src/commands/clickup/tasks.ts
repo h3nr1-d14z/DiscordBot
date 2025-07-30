@@ -1,10 +1,11 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
-import { Command } from '../../types';
+import { BotCommand, CommandCategory } from '../../types';
 import { database } from '../../services/database';
 import { clickupService } from '../../services/clickupService';
 import { logger } from '../../utils/logger';
 
-const command: Command = {
+const command: BotCommand = {
+  category: CommandCategory.Utility,
   data: new SlashCommandBuilder()
     .setName('tasks')
     .setDescription('View your upcoming ClickUp tasks')
@@ -87,7 +88,6 @@ const command: Command = {
 
         for (const task of pageTasks) {
           const taskDisplay = clickupService.formatTaskForDisplay(task);
-          const fieldName = task.taskName.length > 100 ? task.taskName.substring(0, 97) + '...' : task.taskName;
           
           embed.addFields({
             name: '\u200B',

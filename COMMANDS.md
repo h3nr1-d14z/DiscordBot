@@ -1,6 +1,6 @@
 # Discord Fun Bot - Command Reference
 
-> 📝 This documentation is auto-generated. Last updated: 2025-07-27T04:54:02.044Z
+> 📝 This documentation is auto-generated. Last updated: 2025-07-29T19:46:34.291Z
 
 ## Table of Contents
 
@@ -13,6 +13,23 @@
 ## Command List
 
 ### 🛠️ Utility Commands
+
+#### `/clickup`
+
+**Description:** Manage your ClickUp integration
+
+**Options:**
+
+- `link` *(optional)*: Link your ClickUp account
+- `unlink` *(optional)*: Unlink your ClickUp account
+- `status` *(optional)*: Check your ClickUp integration status
+
+**Usage:**
+```
+/clickup (link) (unlink) (status)
+```
+
+---
 
 #### `/help`
 
@@ -40,6 +57,38 @@
 **Usage:**
 ```
 /ping
+```
+
+---
+
+#### `/reminder`
+
+**Description:** Set up daily ClickUp task reminders
+
+**Options:**
+
+- `enable` *(optional)*: Enable daily task reminders
+- `disable` *(optional)*: Disable daily task reminders
+- `status` *(optional)*: Check your reminder settings
+
+**Usage:**
+```
+/reminder (enable) (disable) (status)
+```
+
+---
+
+#### `/tasks`
+
+**Description:** View your upcoming ClickUp tasks
+
+**Options:**
+
+- `days` *(optional)*: Number of days to look ahead (default: 14)
+
+**Usage:**
+```
+/tasks (days)
 ```
 
 ---
@@ -191,6 +240,80 @@
 
 ### 🎮 Games Commands
 
+#### `/2048`
+
+**Description:** Play the classic 2048 puzzle game with beautiful graphics!
+
+**Options:**
+
+- `solo` *(optional)*: Play 2048 by yourself
+- `challenge` *(optional)*: Challenge another player to beat your score!
+- `embed` *(optional)*: Play 2048 in an embedded activity (requires voice channel)
+
+**Usage:**
+```
+/2048 (solo) (challenge) (embed)
+```
+
+---
+
+#### `/battleship`
+
+**Description:** Play Battleship against another player!
+
+**Options:**
+
+- `opponent` *(required)*: The player to challenge
+
+**Usage:**
+```
+/battleship [opponent]
+```
+
+---
+
+#### `/bingo`
+
+**Description:** Start a Bingo game!
+
+**Options:**
+
+- `pattern` *(optional)*: Win pattern
+  - Choices: `Line (row/column/diagonal)`, `Full House (all numbers)`, `Four Corners`, `X Pattern`, `Plus Pattern`
+
+**Usage:**
+```
+/bingo (pattern)
+```
+
+---
+
+#### `/blackjack`
+
+**Description:** Play Blackjack against the dealer!
+
+**Usage:**
+```
+/blackjack
+```
+
+---
+
+#### `/chess`
+
+**Description:** Play Chess against another player!
+
+**Options:**
+
+- `opponent` *(required)*: The player to challenge
+
+**Usage:**
+```
+/chess [opponent]
+```
+
+---
+
 #### `/connect4`
 
 **Description:** Play Connect Four
@@ -208,15 +331,56 @@
 
 ---
 
-#### `/doom`
+#### `/dice`
 
-**Description:** Play a text-based Doom-like dungeon crawler
-
-**Cooldown:** 5 seconds
+**Description:** Roll the dice and bet on the outcome! 🎲
 
 **Usage:**
 ```
-/doom
+/dice
+```
+
+---
+
+#### `/hangman`
+
+**Description:** Play Hangman - guess the word letter by letter!
+
+**Options:**
+
+- `solo` *(optional)*: Play Hangman by yourself
+- `challenge` *(optional)*: Challenge someone with your own word!
+
+**Usage:**
+```
+/hangman (solo) (challenge)
+```
+
+---
+
+#### `/memory`
+
+**Description:** Play Memory Match - find all the matching pairs!
+
+**Options:**
+
+- `difficulty` *(optional)*: Choose difficulty level
+  - Choices: `Easy (3x4)`, `Medium (4x4)`, `Hard (4x5)`
+
+**Usage:**
+```
+/memory (difficulty)
+```
+
+---
+
+#### `/poker`
+
+**Description:** Start a Texas Hold'em poker game! (2-8 players)
+
+**Usage:**
+```
+/poker
 ```
 
 ---
@@ -235,6 +399,53 @@
 **Usage:**
 ```
 /rps (opponent) (bet)
+```
+
+---
+
+#### `/slots`
+
+**Description:** Play the slot machine! 🎰
+
+**Options:**
+
+- `bet` *(optional)*: Amount to bet (10-100 credits)
+
+**Usage:**
+```
+/slots (bet)
+```
+
+---
+
+#### `/snake`
+
+**Description:** Play the classic Snake game!
+
+**Options:**
+
+- `play` *(optional)*: Play Snake in Discord chat
+- `embed` *(optional)*: Play Snake in an embedded activity (requires voice channel)
+
+**Usage:**
+```
+/snake (play) (embed)
+```
+
+---
+
+#### `/sudoku`
+
+**Description:** Play Sudoku puzzle game!
+
+**Options:**
+
+- `difficulty` *(optional)*: Choose difficulty level
+  - Choices: `Easy`, `Medium`, `Hard`
+
+**Usage:**
+```
+/sudoku (difficulty)
 ```
 
 ---
@@ -276,6 +487,35 @@
 
 ---
 
+#### `/uno`
+
+**Description:** Start a game of UNO! (2-8 players)
+
+**Usage:**
+```
+/uno
+```
+
+---
+
+#### `/wordchain`
+
+**Description:** Play Word Chain - each word must start with the last letter of the previous word!
+
+**Options:**
+
+- `player2` *(required)*: Second player
+- `player3` *(optional)*: Third player (optional)
+- `player4` *(optional)*: Fourth player (optional)
+- `timelimit` *(optional)*: Time limit per turn in seconds (default: 30)
+
+**Usage:**
+```
+/wordchain [player2] (player3) (player4) (timelimit)
+```
+
+---
+
 ### 🎉 Fun Commands
 
 #### `/8ball`
@@ -295,6 +535,22 @@
 
 ---
 
+#### `/activity`
+
+**Description:** Start a Discord Activity in your voice channel!
+
+**Options:**
+
+- `type` *(required)*: The activity to start
+  - Choices: `♠️ Poker Night`, `🎣 Fishing`, `♟️ Chess`, `🏁 Checkers`, `📝 Letter League`, `🍔 Word Snacks`, `🎨 Sketch Heads`, `⚡ SpellCast`, `⛳ Putt Party`, `🏝️ Land-io`, `⚽ Bobble League`, `❓ Ask Away`, `😂 Know What I Meme`, `💥 Bash Out`, `☎️ Gartic Phone`, `📺 Watch Together`, `✏️ Whiteboard`, `🃏 Blazing 8s`
+
+**Usage:**
+```
+/activity [type]
+```
+
+---
+
 #### `/joke`
 
 **Description:** Get a random joke
@@ -309,6 +565,22 @@
 **Usage:**
 ```
 /joke (category)
+```
+
+---
+
+#### `/meme`
+
+**Description:** Generate a meme with custom text (supports Vietnamese!)
+
+**Options:**
+
+- `template` *(optional)*: Create a meme using popular templates
+- `custom` *(optional)*: Create a meme with your own image
+
+**Usage:**
+```
+/meme (template) (custom)
 ```
 
 ---
@@ -364,14 +636,14 @@
 
 ## Command Statistics
 
-**Total Commands:** 22
+**Total Commands:** 40
 
 **By Category:**
 
-- 🛠️ Utility: 2 commands
+- 🛠️ Utility: 5 commands
 - 🎵 Music: 10 commands
-- 🎮 Games: 5 commands
-- 🎉 Fun: 3 commands
+- 🎮 Games: 18 commands
+- 🎉 Fun: 5 commands
 - 💰 Economy: 2 commands
 
 ## Legend

@@ -6,10 +6,14 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ButtonInteraction,
-  ComponentType
+  ComponentType,
+  VoiceChannel,
+  StageChannel
 } from 'discord.js';
 import { BotCommand, CommandCategory } from '../../types';
 import { database } from '../../services/database';
+import { activityService } from '../../services/activityService';
+import { logger } from '../../utils/logger';
 
 interface DoomGame {
   playerX: number;
@@ -61,12 +65,31 @@ const itemTypes = {
 const command: BotCommand = {
   data: new SlashCommandBuilder()
     .setName('doom')
-    .setDescription('Play a text-based Doom-like dungeon crawler'),
+    .setDescription('Play DOOM!')
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('text')
+        .setDescription('Play text-based Doom in Discord chat'))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('embed')
+        .setDescription('Play DOOM in an embedded activity (requires voice channel)')),
   
   category: CommandCategory.Games,
   cooldown: 5,
   
   async execute(interaction: ChatInputCommandInteraction) {
+    const subcommand = interaction.options.getSubcommand();
+    
+    if (subcommand === 'text') {
+      await playTextDoom(interaction);
+    } else if (subcommand === 'embed') {
+      await playEmbeddedDoom(interaction);
+    }
+  },
+};
+
+async function playTextDoom(interaction: ChatInputCommandInteraction) {
     const gameId = `doom_${interaction.id}`;
     const game = initializeGame(gameId, interaction.user.id);
     
@@ -146,8 +169,7 @@ const command: BotCommand = {
         components: []
       }).catch(() => {});
     });
-  },
-};
+}
 
 function initializeGame(gameId: string, userId: string): DoomGame {
   const game: DoomGame = {
@@ -473,6 +495,83 @@ async function handleGameEnd(interaction: ButtonInteraction, game: DoomGame, sur
     embeds: [embed],
     components: []
   });
+}
+
+async function playEmbeddedDoom(interaction: ChatInputCommandInteraction) {
+  // Check if user is in a voice channel
+  if (!interaction.guild) {
+    await interaction.reply({
+      content: '❌ This command can only be used in a server!',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const member = interaction.guild.members.cache.get(interaction.user.id);
+  if (!member || !member.voice.channel) {
+    await interaction.reply({
+      content: '❌ You must be in a voice channel to start an embedded activity!',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const voiceChannel = member.voice.channel;
+  
+  // Check if the channel is a voice or stage channel
+  if (!(voiceChannel instanceof VoiceChannel) && !(voiceChannel instanceof StageChannel)) {
+    await interaction.reply({
+      content: '❌ Activities can only be started in voice or stage channels!',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await interaction.deferReply();
+
+  try {
+    // Create the activity
+    const inviteUrl = await activityService.createActivity(voiceChannel.id, 'doom');
+    
+    if (!inviteUrl) {
+      await interaction.editReply({
+        content: '❌ Failed to create the activity. Please try again later.'
+      });
+      return;
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle('🔫 DOOM Activity Started!')
+      .setDescription(`Click the button below to play DOOM in ${voiceChannel.name}!`)
+      .addFields(
+        { name: 'How to Play', value: 'Classic DOOM gameplay in your browser!' },
+        { name: 'Voice Channel', value: voiceChannel.name, inline: true },
+        { name: 'Players', value: 'Single Player', inline: true }
+      )
+      .setColor(0xFF0000)
+      .setTimestamp();
+
+    const joinButton = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setLabel('Play DOOM')
+          .setURL(inviteUrl)
+          .setStyle(ButtonStyle.Link)
+          .setEmoji('🔫')
+      );
+
+    await interaction.editReply({
+      embeds: [embed],
+      components: [joinButton]
+    });
+  } catch (error: any) {
+    logger.error('Error creating DOOM activity:', error);
+    
+    const errorMessage = error.message || 'Failed to create the activity. Make sure the bot has the necessary permissions.';
+    await interaction.editReply({
+      content: `❌ ${errorMessage}`
+    });
+  }
 }
 
 export default command;

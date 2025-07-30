@@ -5,6 +5,8 @@ import { EventHandler } from './handlers/eventHandler';
 import { database } from './services/database';
 import { HealthCheckServer } from './services/healthCheck';
 import { ReminderService, reminderService as reminderServiceInstance } from './services/reminderService';
+import { embeddedAppServer } from './services/embeddedAppServerFixed';
+import { initializeActivityService } from './services/activityService';
 import { logger } from './utils/logger';
 
 class DiscordBot {
@@ -44,6 +46,10 @@ class DiscordBot {
       // Initialize database
       await database.initialize();
 
+      // Start embedded app server
+      await embeddedAppServer.start();
+      logger.info(`Embedded app server available at ${embeddedAppServer.getUrl()}`);
+
       // Load handlers
       await this.commandHandler.loadCommands(this.client);
       await this.eventHandler.loadEvents(this.client);
@@ -66,6 +72,9 @@ class DiscordBot {
       const reminderService = new ReminderService(this.client);
       await reminderService.initialize();
       
+      // Initialize activity service
+      initializeActivityService(this.client);
+      
       // In development mode, watch for command changes
       if (process.env.NODE_ENV === 'development') {
         const { watchCommands } = await import('./utils/watchCommands');
@@ -83,6 +92,9 @@ class DiscordBot {
     try {
       // Stop health check server
       this.healthCheckServer.stop();
+      
+      // Stop embedded app server
+      await embeddedAppServer.stop();
       
       // Close database connection
       await database.close();

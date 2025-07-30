@@ -24,9 +24,7 @@ export class ReminderService {
 
   private async scheduleAllReminders() {
     try {
-      const reminders = await database.all(
-        'SELECT * FROM user_reminders WHERE is_enabled = 1'
-      );
+      const reminders = await database.getAllEnabledReminders();
 
       for (const reminder of reminders) {
         const jobKey = `${reminder.user_id}_${reminder.reminder_time}`;
@@ -140,10 +138,7 @@ export class ReminderService {
         embeds: [embed]
       });
 
-      await database.run(
-        'UPDATE user_reminders SET last_sent = date(\'now\') WHERE user_id = ?',
-        [userId]
-      );
+      await database.updateReminderLastSent(userId);
 
       logger.info(`Sent reminder to user ${userId} in channel ${channelId}`);
     } catch (error) {

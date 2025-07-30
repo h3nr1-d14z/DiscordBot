@@ -63,6 +63,9 @@ export enum GameType {
   NumberGuess = 'numberguess',
   WordChain = 'wordchain',
   TwoZeroFourEight = '2048',
+  Hangman = 'hangman',
+  Memory = 'memory',
+  Snake = 'snake',
 }
 
 export interface TriviaQuestion {

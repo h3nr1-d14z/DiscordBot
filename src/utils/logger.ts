@@ -67,10 +67,10 @@ export const logger = winston.createLogger({
   ],
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
-    new winston.transports.Console({
-      format: consoleFormat,
-    })
-  );
-}
+// Console transport stays on in production too — with only file transports,
+// `docker logs`/`pm2 logs` would show nothing and crash output would vanish.
+logger.add(
+  new winston.transports.Console({
+    format: consoleFormat,
+  })
+);

@@ -7,7 +7,7 @@ dotenv.config();
 // Get current git branch name
 function getCurrentBranch(): string {
   try {
-    const branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
+    const branch = execSync('git branch --show-current', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
     return branch || 'main';
   } catch (error) {
     // Fallback if not in git repo or git not available

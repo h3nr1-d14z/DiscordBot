@@ -77,6 +77,9 @@ class DiscordBot {
       }
     } catch (error) {
       logger.error('Failed to start bot:', error);
+      // winston transports flush asynchronously — drain them or the crash reason never reaches docker logs
+      logger.end();
+      await new Promise<void>((resolve) => logger.once('finish', resolve));
       process.exit(1);
     }
   }

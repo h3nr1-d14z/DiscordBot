@@ -8,6 +8,8 @@ import { logger } from '../utils/logger';
 export class CommandHandler {
   private commands: Collection<string, BotCommand>;
   private commandArray: any[];
+  // tsx dev: __dirname is src/handlers; compiled prod: dist/handlers — sibling commands either way
+  private readonly commandsPath = path.join(__dirname, '..', 'commands');
 
   constructor() {
     this.commands = new Collection();
@@ -15,15 +17,13 @@ export class CommandHandler {
   }
 
   async loadCommands(client: Client): Promise<void> {
-    // tsx dev: __dirname is src/handlers; compiled prod: dist/handlers — sibling commands either way
-    const commandsPath = path.join(__dirname, '..', 'commands');
-    logger.info(`Loading commands from: ${commandsPath}`);
-    
-    const commandFolders = readdirSync(commandsPath);
+    logger.info(`Loading commands from: ${this.commandsPath}`);
+
+    const commandFolders = readdirSync(this.commandsPath);
     logger.info(`Found command folders: ${commandFolders.join(', ')}`);
 
     for (const folder of commandFolders) {
-      const folderPath = path.join(commandsPath, folder);
+      const folderPath = path.join(this.commandsPath, folder);
       const commandFiles = readdirSync(folderPath).filter(
         file => file.endsWith('.ts') || file.endsWith('.js')
       );
@@ -134,13 +134,11 @@ export class CommandHandler {
   
   async loadCommandsForRegistration(): Promise<any[]> {
     const commands: any[] = [];
-    // tsx dev: src/handlers sibling; compiled prod: dist/handlers sibling
-    const commandsPath = path.join(__dirname, '..', 'commands');
-    
-    const commandFolders = readdirSync(commandsPath);
-    
+
+    const commandFolders = readdirSync(this.commandsPath);
+
     for (const folder of commandFolders) {
-      const folderPath = path.join(commandsPath, folder);
+      const folderPath = path.join(this.commandsPath, folder);
       const commandFiles = readdirSync(folderPath).filter(
         file => file.endsWith('.ts') || file.endsWith('.js')
       );

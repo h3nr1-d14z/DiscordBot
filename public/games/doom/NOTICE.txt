@@ -1,0 +1,19 @@
+DOOM activity assets — provenance & licenses
+=============================================
+
+Engine (GPLv2 WebSockets Doom, Chocolate Doom port):
+  doom.mjs  sha256 5100891d5afa8036749d0d01fd869772b6b1d9e0340dce75564709709a3d735e
+  doom.wasm sha256 cb77e46ed17ec2411d9a09e5c87fb3d95947923d1097185e054df3aac29184be
+  Pin & build instructions: ./SOURCE.md — upstream
+  https://github.com/Saketh-Chandra/doom-wasm-pwa@a77edfd8bbc7e66b119a49c954f69a8b24e59206
+  (Emscripten 3.1.45). License text: ./COPYING.txt
+
+Game data:
+  DOOM1.WAD — original unmodified Doom 1 v1.9 shareware (4,196,020 bytes,
+  sha256 1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771).
+  Freely redistributable in unmodified form; license text:
+  ./licenses/DOOM1-SHAREWARE.txt
+
+Full game (3 episodes): replace DOOM1.WAD with your own registered DOOM.WAD
+(Steam/GOG install) — same filename not required, pass it via the -iwad arg
+in index.html. Do not commit purchased WADs to this repository.

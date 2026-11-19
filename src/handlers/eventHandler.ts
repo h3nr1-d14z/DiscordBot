@@ -6,7 +6,8 @@ import { logger } from '../utils/logger';
 
 export class EventHandler {
   async loadEvents(client: Client): Promise<void> {
-    const eventsPath = path.join(process.cwd(), 'src', 'events');
+    // tsx dev: src/handlers sibling; compiled prod: dist/handlers sibling
+    const eventsPath = path.join(__dirname, '..', 'events');
     logger.info(`Loading events from: ${eventsPath}`);
     
     const eventFiles = readdirSync(eventsPath).filter(

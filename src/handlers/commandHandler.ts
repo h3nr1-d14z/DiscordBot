@@ -15,8 +15,8 @@ export class CommandHandler {
   }
 
   async loadCommands(client: Client): Promise<void> {
-    // Use process.cwd() for better path resolution with tsx
-    const commandsPath = path.join(process.cwd(), 'src', 'commands');
+    // tsx dev: __dirname is src/handlers; compiled prod: dist/handlers — sibling commands either way
+    const commandsPath = path.join(__dirname, '..', 'commands');
     logger.info(`Loading commands from: ${commandsPath}`);
     
     const commandFolders = readdirSync(commandsPath);
@@ -134,7 +134,8 @@ export class CommandHandler {
   
   async loadCommandsForRegistration(): Promise<any[]> {
     const commands: any[] = [];
-    const commandsPath = path.join(process.cwd(), 'src', 'commands');
+    // tsx dev: src/handlers sibling; compiled prod: dist/handlers sibling
+    const commandsPath = path.join(__dirname, '..', 'commands');
     
     const commandFolders = readdirSync(commandsPath);
     

@@ -1,45 +1,35 @@
-FROM node:18-alpine
+FROM node:18-slim
 
-# Install build dependencies and FFmpeg for music
-RUN apk add --no-cache python3 make g++ ffmpeg
+# Runtime shared libraries for canvas (meme command) and curl-free healthchecks via node
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       libcairo2 libpango-1.0-0 libjpeg62-turbo libgif7 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create app directory
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all deps (typescript is a devDep) then build, then prune to production
+RUN npm ci
 
-# Copy TypeScript config and source files
 COPY tsconfig.json ./
 COPY src ./src
-
-# Build TypeScript
-RUN npm install -g typescript
+COPY public ./public
 RUN npm run build
 
-# Remove dev dependencies and source files
-RUN rm -rf src/
-RUN npm prune --production
+RUN rm -rf src/ && npm prune --omit=dev
 
-# Create data directory
 RUN mkdir -p data logs
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-RUN chown -R nodejs:nodejs /app
+RUN addgroup --gid 1001 --system nodejs \
+    && adduser --uid 1001 --system --ingroup nodejs nodejs \
+    && chown -R nodejs:nodejs /app
 
-# Switch to non-root user
 USER nodejs
 
-# Expose health check port
-EXPOSE 8736
+EXPOSE 8736 3000
 
-# Set environment
 ENV NODE_ENV=production
 
-# Start the bot
 CMD ["node", "dist/index.js"]

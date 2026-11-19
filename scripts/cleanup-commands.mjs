@@ -11,7 +11,7 @@ const clientId = process.env.CLIENT_ID;
 const { CommandHandler } = await import('../dist/handlers/commandHandler.js');
 const handler = new CommandHandler();
 const commands = await handler.loadCommandsForRegistration();
-const names = () => commands.map(c => c.data.name).join(', ');
+const names = () => commands.map(c => c.name).join(', ');
 
 // Entry Point commands (type 4 / user-install) must be re-sent verbatim in any
 // bulk update, or Discord rejects the whole PUT with code 50240.

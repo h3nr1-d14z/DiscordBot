@@ -363,7 +363,7 @@ async function handleGameEnd(
       await database.createUser(winnerId, winnerId === player1.id ? player1.username : player2!.username);
     }
     await database.updateGameStats(winnerId, GameType.ConnectFour, { wins: 1 });
-    await database.updateUser(winnerId, { xp: (user?.xp || 0) + 30, balance: (user?.balance || 0) + 20 });
+    await database.updateUser(winnerId, { xp: (user?.xp || 0) + 30 });
   }
   
   if (loserId) {

@@ -36,22 +36,13 @@ const command: BotCommand = {
         .setName('opponent')
         .setDescription('Challenge another user (leave empty to play against bot)')
         .setRequired(false)
-    )
-    .addIntegerOption(option =>
-      option
-        .setName('bet')
-        .setDescription('Bet coins on the game (max 100)')
-        .setRequired(false)
-        .setMinValue(1)
-        .setMaxValue(100)
     ),
-  
+
   category: CommandCategory.Games,
   cooldown: 5,
-  
+
   async execute(interaction: ChatInputCommandInteraction) {
     const opponent = interaction.options.getUser('opponent');
-    const betAmount = interaction.options.getInteger('bet') || 0;
     const isVsBot = !opponent || opponent.id === interaction.client.user?.id;
     
     if (opponent && opponent.id === interaction.user.id) {
@@ -70,33 +61,9 @@ const command: BotCommand = {
       return;
     }
     
-    // Check if user has enough coins for bet
-    if (betAmount > 0) {
-      const user = await database.getUser(interaction.user.id);
-      if (!user || user.balance < betAmount) {
-        await interaction.reply({
-          content: `❌ You don't have enough coins! Your balance: ${user?.balance || 0} coins`,
-          ephemeral: true
-        });
-        return;
-      }
-      
-      if (!isVsBot) {
-        const opponentUser = await database.getUser(opponent!.id);
-        if (!opponentUser || opponentUser.balance < betAmount) {
-          await interaction.reply({
-            content: `❌ Your opponent doesn't have enough coins!`,
-            ephemeral: true
-          });
-          return;
-        }
-      }
-    }
-    
     const gameData = {
       player1: { id: interaction.user.id, choice: null as Choice | null },
-      player2: { id: isVsBot ? 'bot' : opponent!.id, choice: null as Choice | null },
-      bet: betAmount
+      player2: { id: isVsBot ? 'bot' : opponent!.id, choice: null as Choice | null }
     };
     
     const embed = new EmbedBuilder()
@@ -107,11 +74,11 @@ const command: BotCommand = {
           ? 'Choose your move!' 
           : `${interaction.user} vs ${opponent}\nBoth players need to choose!`
       )
-      .setFooter({ 
-        text: betAmount > 0 ? `Bet: ${betAmount} coins` : 'No bet',
+      .setFooter({
+        text: 'No bet',
         iconURL: interaction.user.displayAvatarURL()
       });
-    
+
     const row = new ActionRowBuilder<ButtonBuilder>();
     choices.forEach(choice => {
       row.addComponents(
@@ -205,8 +172,8 @@ const command: BotCommand = {
               inline: true
             }
           )
-          .setFooter({ 
-            text: betAmount > 0 ? `Bet: ${betAmount} coins` : 'No bet',
+          .setFooter({
+            text: 'No bet',
             iconURL: interaction.user.displayAvatarURL()
           });
         
@@ -260,27 +227,6 @@ async function handleGameEnd(
     loserId = gameData.player1.id;
   }
   
-  // Update stats and handle bets
-  if (result !== 'draw' && gameData.bet > 0) {
-    if (winnerId) {
-      const winner = await database.getUser(winnerId);
-      if (winner) {
-        await database.updateUser(winnerId, {
-          balance: winner.balance + gameData.bet
-        });
-      }
-    }
-    
-    if (loserId) {
-      const loser = await database.getUser(loserId);
-      if (loser) {
-        await database.updateUser(loserId, {
-          balance: loser.balance - gameData.bet
-        });
-      }
-    }
-  }
-  
   // Update game stats
   for (const playerId of [gameData.player1.id, gameData.player2.id].filter(id => id !== 'bot')) {
     const user = await database.getUser(playerId);
@@ -328,14 +274,6 @@ async function handleGameEnd(
         inline: true
       }
     );
-  
-  if (gameData.bet > 0) {
-    resultEmbed.addFields({
-      name: result === 'draw' ? 'Bet Returned' : 'Winnings',
-      value: result === 'draw' ? 'No winner' : `💰 ${gameData.bet} coins`,
-      inline: false
-    });
-  }
   
   resultEmbed.addFields({
     name: 'XP Earned',

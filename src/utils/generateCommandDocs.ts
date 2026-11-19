@@ -5,16 +5,12 @@ import { BotCommand, CommandCategory } from '../types';
 const categoryEmojis: Record<CommandCategory, string> = {
   [CommandCategory.Fun]: '🎉',
   [CommandCategory.Games]: '🎮',
-  [CommandCategory.Utility]: '🛠️',
-  [CommandCategory.Economy]: '💰',
   [CommandCategory.Moderation]: '👮',
 };
 
 const categoryOrder = [
-  CommandCategory.Utility,
   CommandCategory.Games,
   CommandCategory.Fun,
-  CommandCategory.Economy,
   CommandCategory.Moderation,
 ];
 

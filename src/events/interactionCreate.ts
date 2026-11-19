@@ -1,8 +1,6 @@
-import { Events, Interaction, Collection, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { Events, Interaction, Collection, ChatInputCommandInteraction } from 'discord.js';
 import { BotEvent, BotCommand, CooldownData } from '../types';
 import { logger } from '../utils/logger';
-import { database } from '../services/database';
-import { clickupService } from '../services/clickupService';
 
 const cooldowns = new Collection<string, CooldownData>();
 
@@ -12,10 +10,6 @@ const event: BotEvent = {
     logger.info(`Interaction received: ${interaction.type}`);
     
     if (interaction.isModalSubmit()) {
-      if (interaction.customId === 'clickup_link_modal') {
-        await handleClickUpLinkModal(interaction);
-        return;
-      }
       // Return early for game-related modals - they're handled by collectors
       if (interaction.customId === 'letter_guess_modal' || 
           interaction.customId === 'letter_guess_modal_challenge') {
@@ -97,63 +91,5 @@ const event: BotEvent = {
     }
   },
 };
-
-async function handleClickUpLinkModal(interaction: any) {
-  await interaction.deferReply({ ephemeral: true });
-  
-  try {
-    const email = interaction.fields.getTextInputValue('clickup_email');
-    const apiToken = interaction.fields.getTextInputValue('clickup_token');
-    
-    const isValid = await clickupService.validateApiToken(apiToken);
-    
-    if (!isValid) {
-      await interaction.editReply({
-        content: '❌ Invalid API token. Please check your token and try again.'
-      });
-      return;
-    }
-    
-    const userInfo = await clickupService.getUserInfo(apiToken);
-    if (!userInfo || userInfo.email.toLowerCase() !== email.toLowerCase()) {
-      await interaction.editReply({
-        content: '❌ The email doesn\'t match the API token owner. Please verify your information.'
-      });
-      return;
-    }
-    
-    const workspaces = await clickupService.getWorkspaces(apiToken);
-    const workspaceId = workspaces.length > 0 ? workspaces[0].id : null;
-    
-    await database.linkClickUpEmail(interaction.user.id, email);
-    await database.updateClickUpUser(interaction.user.id, {
-      clickupUserId: userInfo.id,
-      apiToken: apiToken,
-      workspaceId: workspaceId
-    });
-    
-    const embed = new EmbedBuilder()
-      .setTitle('✅ ClickUp Linked Successfully!')
-      .setColor(0x00C853)
-      .setDescription('Your ClickUp account has been linked to your Discord account.')
-      .addFields(
-        { name: '📧 Email', value: email, inline: true },
-        { name: '👤 Username', value: userInfo.username, inline: true }
-      );
-    
-    if (workspaces.length > 0) {
-      embed.addFields({ name: '🏢 Workspace', value: workspaces[0].name, inline: true });
-    }
-    
-    embed.setFooter({ text: 'You can now use /tasks to view your upcoming tasks!' });
-    
-    await interaction.editReply({ embeds: [embed] });
-  } catch (error) {
-    logger.error('Error linking ClickUp account:', error);
-    await interaction.editReply({
-      content: '❌ An error occurred while linking your account. Please try again.'
-    });
-  }
-}
 
 export default event;

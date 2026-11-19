@@ -19,8 +19,6 @@ export interface BotEvent {
 export enum CommandCategory {
   Fun = 'fun',
   Games = 'games',
-  Utility = 'utility',
-  Economy = 'economy',
   Moderation = 'moderation',
 }
 
@@ -29,9 +27,6 @@ export interface User {
   username: string;
   xp: number;
   level: number;
-  balance: number;
-  dailyStreak: number;
-  lastDaily: Date | null;
   createdAt: Date;
 }
 
@@ -72,30 +67,12 @@ export interface GameResult {
   isDraw?: boolean;
   score?: number;
   xpReward: number;
-  coinReward: number;
-}
-
-export interface EconomyTransaction {
-  userId: string;
-  amount: number;
-  type: TransactionType;
-  description: string;
-  timestamp: Date;
-}
-
-export enum TransactionType {
-  Daily = 'daily',
-  GameReward = 'game_reward',
-  Purchase = 'purchase',
-  Transfer = 'transfer',
-  Bonus = 'bonus',
 }
 
 export interface CooldownData {
   timestamps: Collection<string, number>;
   defaultCooldown: number;
 }
-
 export interface Config {
   token: string;
   clientId: string;
@@ -104,7 +81,6 @@ export interface Config {
   databasePath: string;
   weatherApiKey?: string;
   tunnelToken?: string;
-  enableEconomy: boolean;
   enableLeveling: boolean;
   defaultPrefix: string;
   port: number;

@@ -1,96 +1,13 @@
 # Discord Fun Bot - Command Reference
 
-> 📝 This documentation is auto-generated. Last updated: 2026-11-19T04:38:33.812Z
+> 📝 This documentation is auto-generated. Last updated: 2026-11-19T04:47:45.924Z
 
 ## Table of Contents
 
-- [🛠️ Utility Commands](#utility-commands)
 - [🎮 Games Commands](#games-commands)
 - [🎉 Fun Commands](#fun-commands)
-- [💰 Economy Commands](#economy-commands)
 
 ## Command List
-
-### 🛠️ Utility Commands
-
-#### `/clickup`
-
-**Description:** Manage your ClickUp integration
-
-**Options:**
-
-- `link` *(optional)*: Link your ClickUp account
-- `unlink` *(optional)*: Unlink your ClickUp account
-- `status` *(optional)*: Check your ClickUp integration status
-
-**Usage:**
-```
-/clickup (link) (unlink) (status)
-```
-
----
-
-#### `/help`
-
-**Description:** Show all available commands
-
-**Cooldown:** 5 seconds
-
-**Options:**
-
-- `command` *(optional)*: Get detailed help for a specific command
-
-**Usage:**
-```
-/help (command)
-```
-
----
-
-#### `/ping`
-
-**Description:** Replies with Pong and bot latency!
-
-**Cooldown:** 5 seconds
-
-**Usage:**
-```
-/ping
-```
-
----
-
-#### `/reminder`
-
-**Description:** Set up daily ClickUp task reminders
-
-**Options:**
-
-- `enable` *(optional)*: Enable daily task reminders
-- `disable` *(optional)*: Disable daily task reminders
-- `status` *(optional)*: Check your reminder settings
-
-**Usage:**
-```
-/reminder (enable) (disable) (status)
-```
-
----
-
-#### `/tasks`
-
-**Description:** View your upcoming ClickUp tasks
-
-**Options:**
-
-- `days` *(optional)*: Number of days to look ahead (default: 14)
-
-**Usage:**
-```
-/tasks (days)
-```
-
----
 
 ### 🎮 Games Commands
 
@@ -233,11 +150,10 @@
 **Options:**
 
 - `opponent` *(optional)*: Challenge another user (leave empty to play against bot)
-- `bet` *(optional)*: Bet coins on the game (max 100)
 
 **Usage:**
 ```
-/rps (opponent) (bet)
+/rps (opponent)
 ```
 
 ---
@@ -406,48 +322,14 @@
 
 ---
 
-### 💰 Economy Commands
-
-#### `/balance`
-
-**Description:** Check your or another user's balance
-
-**Cooldown:** 3 seconds
-
-**Options:**
-
-- `user` *(optional)*: User to check balance for
-
-**Usage:**
-```
-/balance (user)
-```
-
----
-
-#### `/daily`
-
-**Description:** Claim your daily reward!
-
-**Cooldown:** 5 seconds
-
-**Usage:**
-```
-/daily
-```
-
----
-
 ## Command Statistics
 
-**Total Commands:** 26
+**Total Commands:** 19
 
 **By Category:**
 
-- 🛠️ Utility: 5 commands
 - 🎮 Games: 14 commands
 - 🎉 Fun: 5 commands
-- 💰 Economy: 2 commands
 
 ## Legend
 

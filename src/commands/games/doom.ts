@@ -473,11 +473,9 @@ async function handleGameEnd(interaction: ButtonInteraction, game: DoomGame, sur
   }
   
   const xpReward = Math.floor(game.score / 10);
-  const coinReward = Math.floor(game.score / 20);
-  
+
   await database.updateUser(game.userId, {
-    xp: (user?.xp || 0) + xpReward,
-    balance: (user?.balance || 0) + coinReward
+    xp: (user?.xp || 0) + xpReward
   });
   
   const embed = new EmbedBuilder()
@@ -487,8 +485,7 @@ async function handleGameEnd(interaction: ButtonInteraction, game: DoomGame, sur
     .addFields(
       { name: 'Final Score', value: `${game.score}`, inline: true },
       { name: 'Level Reached', value: `${game.level}`, inline: true },
-      { name: 'XP Earned', value: `+${xpReward} XP`, inline: true },
-      { name: 'Coins Earned', value: `+${coinReward} coins`, inline: true }
+      { name: 'XP Earned', value: `+${xpReward} XP`, inline: true }
     );
   
   await interaction.update({

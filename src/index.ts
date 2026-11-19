@@ -4,7 +4,6 @@ import { CommandHandler } from './handlers/commandHandler';
 import { EventHandler } from './handlers/eventHandler';
 import { database } from './services/database';
 import { HealthCheckServer } from './services/healthCheck';
-import { ReminderService } from './services/reminderService';
 import { embeddedAppServer } from './services/embeddedAppServerFixed';
 import { initializeActivityService } from './services/activityService';
 import { logger } from './utils/logger';
@@ -67,11 +66,7 @@ class DiscordBot {
       
       // Start health check server
       this.healthCheckServer.start();
-      
-      // Initialize reminder service
-      const reminderService = new ReminderService(this.client);
-      await reminderService.initialize();
-      
+
       // Initialize activity service
       initializeActivityService(this.client);
       

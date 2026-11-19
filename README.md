@@ -6,10 +6,7 @@ A feature-rich Discord bot with games, fun commands, and interactive features.
 
 - 🎮 **Games**: 2048, Word Chain, Hangman, Memory Match, Tic-Tac-Toe, Connect Four, DOOM, and more
 - 🎉 **Fun Commands**: 8ball, jokes, memes, ASCII art
-- 💰 **Economy System**: Virtual currency, daily rewards, shop
 - 📊 **Leveling System**: XP and levels based on activity
-- 🎁 **Interactive**: Polls, giveaways, and more
-- 📋 **ClickUp Integration**: Task management, reminders, and productivity features
 
 ## Setup
 
@@ -74,12 +71,6 @@ Edit `.env` file:
 
 ## Commands
 
-### Utility
-- `/ping` - Check bot latency
-- `/help` - Show all commands
-- `/userinfo` - Display user information
-- `/serverinfo` - Display server information
-
 ### Games
 - `/tictactoe` - Play Tic-Tac-Toe against bot or another player
 - `/connect4` - Strategic board game
@@ -95,11 +86,6 @@ Edit `.env` file:
 - `/joke` - Get a random joke
 - `/roll` - Roll dice with D&D notation
 - `/meme` - Get a random meme (coming soon)
-
-### Economy
-- `/balance` - Check your balance
-- `/daily` - Claim daily reward
-- `/pay` - Transfer coins to another user
 
 ## Deployment with Cloudflare Tunnel
 

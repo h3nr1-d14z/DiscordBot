@@ -40,7 +40,6 @@ export const config: Config = {
   databasePath: getDatabasePath(),
   weatherApiKey: process.env.WEATHER_API_KEY,
   tunnelToken: process.env.TUNNEL_TOKEN,
-  enableEconomy: process.env.ENABLE_ECONOMY === 'true',
   enableLeveling: process.env.ENABLE_LEVELING === 'true',
   defaultPrefix: process.env.DEFAULT_PREFIX || '!',
   port: parseInt(process.env.PORT || '8736'),

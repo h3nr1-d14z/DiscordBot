@@ -78,22 +78,11 @@ export class CommandHandler {
       // Remove any commands from our array that match Entry Point command names
       const entryPointNames = entryPointCommands.map(cmd => cmd.name);
       this.commandArray = this.commandArray.filter(cmd => !entryPointNames.includes(cmd.name));
-      
-      // Add ALL Entry Point commands to ensure we don't remove any
-      for (const entryPoint of entryPointCommands) {
-        // Keep the exact structure from Discord
-        this.commandArray.push({
-          name: entryPoint.name,
-          description: entryPoint.description,
-          type: entryPoint.type,
-          options: entryPoint.options || [],
-          default_member_permissions: entryPoint.default_member_permissions,
-          dm_permission: entryPoint.dm_permission,
-          integration_types: entryPoint.integration_types,
-          contexts: entryPoint.contexts,
-          nsfw: entryPoint.nsfw
-        });
-      }
+
+      // Re-send Entry Points verbatim — the GET object carries the `handler`
+      // field (what makes type 4 the Launch App entry point); a hand-copied
+      // subset drops it and degrades the button on every boot.
+      this.commandArray.push(...entryPointCommands);
       
       logger.info(`Final command array has ${this.commandArray.length} commands`);
       logger.info(`Commands: ${this.commandArray.map(cmd => cmd.name).join(', ')}`);

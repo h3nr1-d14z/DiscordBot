@@ -73,8 +73,16 @@
             overlay.style.display = 'none';
             canvas.style.display = 'block';
 
+            // Registered/Ultimate WAD if the owner dropped DOOM.WAD here, else shareware
+            const loadWad = async () => {
+                try {
+                    const r = await fetch('DOOM.WAD');
+                    if (r.ok) return r.arrayBuffer();
+                } catch {}
+                return fetch('DOOM1.WAD').then(r => r.arrayBuffer());
+            };
             const [wad, wasm] = await Promise.all([
-                fetch('DOOM1.WAD').then(r => r.arrayBuffer()),
+                loadWad(),
                 fetch('doom.wasm').then(r => r.arrayBuffer()),
             ]);
 

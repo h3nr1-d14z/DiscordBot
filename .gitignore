@@ -51,3 +51,7 @@ tmp/
 temp/
 # Junk debug captures
 *-watch.html
+
+# purchased WADs must never be committed (repo is PUBLIC)
+public/games/doom/DOOM.WAD
+public/games/doom/doom2.wad

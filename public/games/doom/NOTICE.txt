@@ -14,6 +14,7 @@ Game data:
   Freely redistributable in unmodified form; license text:
   ./licenses/DOOM1-SHAREWARE.txt
 
-Full game (3 episodes): replace DOOM1.WAD with your own registered DOOM.WAD
-(Steam/GOG install) — same filename not required, pass it via the -iwad arg
-in index.html. Do not commit purchased WADs to this repository.
+Full game (3 episodes): drop your registered DOOM.WAD (Steam/GOG install) into
+this folder as `DOOM.WAD` — index.html prefers it automatically and the episode
+menu appears on its own. NEVER commit it: this repository is PUBLIC and the
+filename is git-ignored on purpose.

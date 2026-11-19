@@ -61,6 +61,7 @@ function snapshot(r: Room, viewer?: Player) {
     line: r.line,
     scores: r.scores,
     players: r.players.map(p => ({ nm: p.name, mark: p.mark })),
+    host: r.players[0] ? r.players[0].mark : null,
     you: viewer ? viewer.mark : null,
   };
 }
@@ -130,13 +131,18 @@ export function attachTicTacToe(server: Server): void {
       if (m.t === 'join' && !me) {
         const name = String(m.name || 'Player').slice(0, 14);
         const code = m.code ? String(m.code).toUpperCase() : '';
-        if (code && rooms.has(code)) {
-          room = rooms.get(code)!;
+        if (code) {
+          // never ghost-create on a typo'd code — the joiner would wait alone
+          room = rooms.get(code) ?? null;
+          if (!room) {
+            ws.send(JSON.stringify({ t: 'err', msg: 'Room not found' }));
+            return;
+          }
           if (room.players.length >= 2) {
             ws.send(JSON.stringify({ t: 'err', msg: 'Room is full' }));
             return;
           }
-          me = { ws, id: Math.random().toString(36).slice(2, 9), name, mark: 'O' };
+          me = { ws, id: Math.random().toString(36).slice(2, 9), name, mark: room.players.some(p => p.mark === 'X') ? 'O' : 'X' };
           room.players.push(me);
         } else {
           room = newRoom();
@@ -172,7 +178,8 @@ export function attachTicTacToe(server: Server): void {
         return;
       }
 
-      if (m.t === 'again' && room.phase === 'over' && me.mark === 'X') {
+      // host seat (players[0]) may be either mark after a forfeit — don't gate on 'X'
+      if (m.t === 'again' && room.phase === 'over' && room.players[0] === me) {
         startRound(room);
       }
     });

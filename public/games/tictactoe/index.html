@@ -259,7 +259,7 @@
         if (!mine) $('board').classList.add('shake');
         setTimeout(() => $('board').classList.remove('shake'), 400);
       }
-      ag.classList.toggle('show', myMark === 'X');
+      ag.classList.toggle('show', !!myMark && myMark === m.host);
     } else {
       st.textContent = '';
     }

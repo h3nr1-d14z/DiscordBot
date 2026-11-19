@@ -67,15 +67,13 @@ export class CommandHandler {
       const existingCommands = await rest.get(route) as any[];
       logger.info(`Found ${existingCommands.length} existing commands`);
       
-      // Find ALL commands that might be Entry Point commands
-      const entryPointCommands = existingCommands.filter(cmd => {
-        // Entry point commands have integration_types that include 1 (user install)
-        const isEntryPoint = cmd.integration_types && Array.isArray(cmd.integration_types) && cmd.integration_types.includes(1);
-        if (isEntryPoint) {
-          logger.info(`Entry Point command found: ${cmd.name} with integration_types: ${JSON.stringify(cmd.integration_types)}`);
-        }
-        return isEntryPoint;
-      });
+      // Find ALL Entry Point commands. Only type 4 is a true Entry Point —
+      // matching integration_types containing 1 resurrected deleted commands
+      // (they merely carry the user-install flag) on every boot.
+      const entryPointCommands = existingCommands.filter(cmd => cmd.type === 4);
+      for (const entryPoint of entryPointCommands) {
+        logger.info(`Entry Point command preserved: ${entryPoint.name} (type 4)`);
+      }
       
       // Remove any commands from our array that match Entry Point command names
       const entryPointNames = entryPointCommands.map(cmd => cmd.name);

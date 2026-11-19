@@ -45,24 +45,8 @@ export class EmbeddedAppServer {
       res.sendFile(path.join(process.cwd(), 'public/games/activity-router.html'));
     });
     
-    // Serve game files directly
-    this.app.get('/games/snake-embed.html', (_req, res) => {
-      const filePath = path.join(process.cwd(), 'public/games/snake-embed.html');
-      logger.info(`Serving snake game from: ${filePath}`);
-      res.sendFile(filePath);
-    });
-    
-    this.app.get('/games/2048-embed.html', (_req, res) => {
-      const filePath = path.join(process.cwd(), 'public/games/2048-embed.html');
-      logger.info(`Serving 2048 game from: ${filePath}`);
-      res.sendFile(filePath);
-    });
-    
-    this.app.get('/games/doom-embed.html', (_req, res) => {
-      const filePath = path.join(process.cwd(), 'public/games/doom-embed.html');
-      logger.info(`Serving doom game from: ${filePath}`);
-      res.sendFile(filePath);
-    });
+    // Static game assets — covers embed pages and doom/ (wasm engine + WAD)
+    this.app.use('/games', express.static(path.join(process.cwd(), 'public/games')));
 
     this.app.get('/health', (_req, res) => {
       res.json({ status: 'ok' });

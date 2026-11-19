@@ -62,7 +62,7 @@
         <div class="legal">Keyboard: arrows/WASD + Ctrl fire, Space use, Shift run, E interact &mdash; DOOM &copy; id Software</div>
     </div>
     <script type="module">
-        import { createDoomRuntime } from './doom/doom.mjs';
+        import { createDoomRuntime } from './doom.mjs';
 
         const canvas = document.getElementById('doom-canvas');
         const overlay = document.getElementById('start-overlay');
@@ -74,8 +74,8 @@
             canvas.style.display = 'block';
 
             const [wad, wasm] = await Promise.all([
-                fetch('doom/DOOM1.WAD').then(r => r.arrayBuffer()),
-                fetch('doom/doom.wasm').then(r => r.arrayBuffer()),
+                fetch('DOOM1.WAD').then(r => r.arrayBuffer()),
+                fetch('doom.wasm').then(r => r.arrayBuffer()),
             ]);
 
             doom = await createDoomRuntime({

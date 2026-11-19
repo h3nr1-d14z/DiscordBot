@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic-Tac-Toe</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body { background: radial-gradient(ellipse at 50% -20%, #12303a 0%, #06070a 60%);
+        color: #e7e9ea; font-family: 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 24px; }
+    h1 { font-size: 26px; letter-spacing: 0.14em; color: #00d4ff; }
+    #board {
+        display: grid; grid-template-columns: repeat(3, 104px); gap: 10px; position: relative;
+    }
+    .cell {
+        width: 104px; height: 104px; border-radius: 14px;
+        background: linear-gradient(150deg, #171a21, #0e1015); border: 1px solid #26272f;
+        font-size: 58px; font-weight: 900; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform 0.1s, background 0.15s;
+    }
+    .cell:hover:empty { transform: scale(1.04); border-color: #00d4ff; }
+    .cell.x { color: #00d4ff; animation: drop 0.22s ease; }
+    .cell.o { color: #ff9f43; animation: drop 0.22s ease; }
+    @keyframes drop { from { transform: scale(1.7); opacity: 0; } }
+    .cell.win { background: linear-gradient(150deg, #14352c, #0e241d); animation: pulse 0.8s ease infinite; }
+    @keyframes pulse { 50% { filter: brightness(1.5); } }
+    #line { position: absolute; height: 6px; border-radius: 4px; background: #57f287;
+        transform-origin: left center; width: 0; transition: width 0.3s ease; z-index: 2;
+        box-shadow: 0 0 14px #57f287; }
+    #status { font-size: 20px; font-weight: 700; min-height: 30px; }
+    #score { color: #949ba4; font-size: 15px; }
+    #score b { color: #fff; }
+    #again { display: none; font-size: 15px; font-weight: 700; padding: 10px 30px; border: none;
+        border-radius: 10px; background: #5865f2; color: #fff; cursor: pointer; }
+    #again.show { display: block; }
+</style>
+</head>
+<body>
+    <h1>TIC-TAC-TOE</h1>
+    <div id="board"><div id="line"></div></div>
+    <div id="status">You are X — your move</div>
+    <div id="score">You <b id="sw">0</b> · AI <b id="sl">0</b> · draws <b id="sd">0</b></div>
+    <button id="again">NEXT ROUND</button>
+<script>
+(() => {
+    const $ = id => document.getElementById(id);
+    const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    let grid, over, w = 0, l = 0, d = 0;
+
+    function newGame() {
+        grid = Array(9).fill(''); over = false;
+        $('line').style.width = '0';
+        $('board').querySelectorAll('.cell').forEach(c => c.remove());
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell'; cell.dataset.i = i;
+            cell.onclick = () => play(+cell.dataset.i);
+            $('board').appendChild(cell);
+        }
+        $('status').textContent = 'You are X — your move';
+        $('again').classList.remove('show');
+    }
+
+    function play(i) {
+        if (over || grid[i]) return;
+        put(i, 'x');
+        if (!checkEnd('x')) {
+            $('status').textContent = 'AI thinking…';
+            setTimeout(() => { put(bestMove(), 'o'); if (!checkEnd('o')) $('status').textContent = 'Your move'; }, 380);
+        }
+    }
+
+    function put(i, mark) {
+        grid[i] = mark;
+        const cell = $('board').querySelector(`[data-i="${i}"]`);
+        cell.textContent = mark === 'x' ? '✕' : '◯';
+        cell.classList.add(mark);
+    }
+
+    function winner(g) {
+        for (const [a, b, c] of LINES) if (g[a] && g[a] === g[b] && g[a] === g[c]) return { mark: g[a], line: [a, b, c] };
+        return g.every(Boolean) ? { mark: 'draw', line: null } : null;
+    }
+
+    function checkEnd(mark) {
+        const res = winner(grid);
+        if (!res) return false;
+        over = true;
+        if (res.mark === 'draw') { d++; $('status').textContent = "It's a draw"; $('status').style.color = '#fee75c'; }
+        else if (res.mark === 'x') {
+            w++; $('status').textContent = 'YOU WIN!'; $('status').style.color = '#57f287';
+        } else {
+            l++; $('status').textContent = 'AI WINS'; $('status').style.color = '#f23f43';
+        }
+        if (res.line) drawWinLine(res.line);
+        $('sw').textContent = w; $('sl').textContent = l; $('sd').textContent = d;
+        $('again').classList.add('show');
+        return true;
+    }
+
+    function drawWinLine([a, , c]) {
+        const cells = $('board').querySelectorAll('.cell');
+        cells[a].classList.add('win'); cells[c].classList.add('win');
+        const b1 = cells[a].getBoundingClientRect(), b2 = cells[c].getBoundingClientRect();
+        const pb = $('board').getBoundingClientRect();
+        const line = $('line');
+        line.style.left = (b1.left - pb.left + b1.width / 2) + 'px';
+        line.style.top = (b1.top - pb.top + b1.height / 2 - 3) + 'px';
+        const dx = b2.left - b1.left, dy = b2.top - b1.top;
+        line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+        requestAnimationFrame(() => line.style.width = Math.hypot(dx, dy) + 'px');
+    }
+
+    // minimax — AI is 'o', plays perfectly
+    function bestMove() {
+        let best = -Infinity, move = -1;
+        for (let i = 0; i < 9; i++) if (!grid[i]) {
+            grid[i] = 'o';
+            const s = mini(grid, false);
+            grid[i] = '';
+            if (s > best) { best = s; move = i; }
+        }
+        return move;
+    }
+    function mini(g, isMax) {
+        const res = winner(g);
+        if (res) return res.mark === 'o' ? 10 : res.mark === 'x' ? -10 : 0;
+        let best = isMax ? -Infinity : Infinity;
+        for (let i = 0; i < 9; i++) if (!g[i]) {
+            g[i] = isMax ? 'o' : 'x';
+            best = isMax ? Math.max(best, mini(g, !isMax)) : Math.min(best, mini(g, !isMax));
+            g[i] = '';
+        }
+        return best;
+    }
+
+    $('again').onclick = newGame;
+    newGame();
+})();
+</script>
+</body>
+</html>

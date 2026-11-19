@@ -1,105 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading Activity...</title>
+    <title>Game Hub</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background-color: #2b2d31;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            flex-direction: column;
+            background: radial-gradient(ellipse at 50% -20%, #1a2036 0%, #06070a 60%);
+            color: #e7e9ea; font-family: 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh; overflow-x: hidden;
         }
-        .game-selector {
-            text-align: center;
-            background: #1e1f22;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        header { text-align: center; padding: 34px 16px 10px; }
+        h1 {
+            font-size: min(11vw, 58px); font-weight: 900; letter-spacing: 0.18em;
+            background: linear-gradient(90deg, #5865f2, #eb459e, #fee75c);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: hue 6s linear infinite;
         }
-        h2 {
-            margin-bottom: 20px;
-            color: #fff;
+        @keyframes hue { to { filter: hue-rotate(360deg); } }
+        header p { color: #949ba4; margin-top: 6px; font-size: 15px; }
+        .grid {
+            display: grid; gap: 18px; padding: 28px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            max-width: 1200px; margin: 0 auto;
         }
-        .game-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
+        .card {
+            position: relative; aspect-ratio: 1; border-radius: 18px;
+            background: linear-gradient(160deg, #16171d, #0d0e13);
+            border: 1px solid #26272f; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 12px; text-decoration: none; color: #e7e9ea;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            overflow: hidden;
         }
-        .game-button {
-            background-color: #5865f2;
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            border-radius: 8px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
+        .card:hover { transform: translateY(-6px) scale(1.03); border-color: var(--glow);
+            box-shadow: 0 12px 34px -8px var(--glow); }
+        .card::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 120%, var(--glow), transparent 65%);
+            opacity: 0.16; transition: opacity 0.2s;
         }
-        .game-button:hover {
-            background-color: #4752c4;
+        .card:hover::before { opacity: 0.4; }
+        .card .icon { font-size: 56px; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); }
+        .card:hover .icon { transform: scale(1.22) rotate(-6deg); }
+        .card .name { font-weight: 700; font-size: 17px; }
+        .card .tag { font-size: 11px; color: #949ba4; text-transform: uppercase; letter-spacing: 0.1em; }
+        .badge {
+            position: absolute; top: 10px; right: 10px; font-size: 10px; font-weight: 700;
+            padding: 3px 9px; border-radius: 99px; letter-spacing: 0.06em;
         }
-        .game-icon {
-            font-size: 40px;
-        }
+        .badge.new { background: #23a55a; color: #fff; }
+        .badge.multi { background: #5865f2; color: #fff; }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
     </style>
 </head>
 <body>
-    <div class="game-selector">
-        <h2>Select a Game</h2>
-        <div class="game-buttons">
-            <button class="game-button" data-game="snake">
-                <span class="game-icon">🐍</span>
-                <span>Snake</span>
-            </button>
-            <button class="game-button" data-game="2048">
-                <span class="game-icon">🎮</span>
-                <span>2048</span>
-            </button>
-            <button class="game-button" data-game="doom">
-                <span class="game-icon">🔫</span>
-                <span>DOOM</span>
-            </button>
-            <button class="game-button" data-game="hexzap">
-                <span class="game-icon">⚡</span>
-                <span>HexZap</span>
-            </button>
-        </div>
-    </div>
-    
+    <header>
+        <h1>GAME HUB</h1>
+        <p>Pick a game — everything runs right here</p>
+    </header>
+    <div class="grid" id="grid"></div>
     <script>
-        function loadGame(game) {
-            const gameMap = {
-                'snake': '/games/snake/',
-                '2048': '/games/2048/',
-                'doom': '/games/doom/',
-                'hexzap': '/games/hexzap/'
-            };
-            
-            const gameUrl = gameMap[game] || gameMap['snake'];
-            window.location.replace(gameUrl);
-        }
-        
-        // Add event listeners to buttons
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('.game-button');
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const game = this.getAttribute('data-game');
-                    loadGame(game);
-                });
-            });
-        });
+        const GAMES = [
+            { id: 'hexzap',   icon: '⚡', name: 'HexZap',    tag: '2-8 players',  glow: '#5865f2', badge: 'multi' },
+            { id: 'doom',     icon: '🔫', name: 'DOOM',      tag: 'FPS classic',  glow: '#f23f43' },
+            { id: 'snake',    icon: '🐍', name: 'Snake',     tag: 'arcade',       glow: '#57f287' },
+            { id: '2048',     icon: '🔢', name: '2048',      tag: 'puzzle',       glow: '#fee75c' },
+            { id: 'tictactoe',icon: '❌', name: 'Tic-Tac-Toe', tag: 'vs AI',      glow: '#00d4ff', badge: 'new' },
+            { id: 'memory',   icon: '🧠', name: 'Memory',    tag: 'match pairs',  glow: '#eb459e', badge: 'new' },
+            { id: 'hangman',  icon: '🪢', name: 'Hangman',   tag: 'word game',    glow: '#ff9f43', badge: 'new' },
+            { id: 'slots',    icon: '🎰', name: 'Slots',     tag: 'luck',         glow: '#ffd700', badge: 'new' },
+            { id: 'dice',     icon: '🎲', name: 'Dice',      tag: 'luck',         glow: '#b980ff', badge: 'new' },
+            { id: 'rps',      icon: '✊', name: 'RPS',       tag: 'vs AI',        glow: '#23a55a', badge: 'new' },
+        ];
+        document.getElementById('grid').innerHTML = GAMES.map(g => `
+            <a class="card" href="/games/${g.id}/" style="--glow:${g.glow}">
+                ${g.badge === 'new' ? '<span class="badge new">NEW</span>' : ''}
+                ${g.badge === 'multi' ? '<span class="badge multi">MULTI</span>' : ''}
+                <div class="icon">${g.icon}</div>
+                <div class="name">${g.name}</div>
+                <div class="tag">${g.tag}</div>
+            </a>`).join('');
     </script>
 </body>
 </html>

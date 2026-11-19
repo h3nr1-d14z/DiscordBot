@@ -3,13 +3,12 @@ import cors from 'cors';
 import path from 'path';
 import { logger } from '../utils/logger';
 import http from 'http';
-import fs from 'fs';
 
 export class EmbeddedAppServer {
   private app: express.Application;
   private server: http.Server | null = null;
   private port: number;
-  private gameSessions: Map<string, { game: string; timestamp: number }> = new Map();
+  private gameSessions: Map<string, { game: string; timestamp: number; gameData?: any }> = new Map();
 
   constructor(port: number = 3000) {
     this.port = port;
@@ -31,6 +30,14 @@ export class EmbeddedAppServer {
     this.gameSessions.set(channelId, { game, timestamp: Date.now() });
     logger.info(`Created game session for channel ${channelId}: ${game}`);
   }
+  
+  setGameData(channelId: string, gameData: any): void {
+    const session = this.gameSessions.get(channelId);
+    if (session) {
+      session.gameData = gameData;
+      logger.info(`Set game data for channel ${channelId}`);
+    }
+  }
 
   private setupServer() {
     // Basic middleware
@@ -42,30 +49,36 @@ export class EmbeddedAppServer {
     this.app.use(express.json());
 
     // Main route for Discord activities - serves the router
-    this.app.get('/', (req, res) => {
+    this.app.get('/', (_req, res) => {
       res.sendFile(path.join(process.cwd(), 'public/games/activity-router.html'));
     });
     
     // Serve game files directly
-    this.app.get('/games/snake-embed.html', (req, res) => {
+    this.app.get('/games/snake-embed.html', (_req, res) => {
       const filePath = path.join(process.cwd(), 'public/games/snake-embed.html');
       logger.info(`Serving snake game from: ${filePath}`);
       res.sendFile(filePath);
     });
     
-    this.app.get('/games/2048-embed.html', (req, res) => {
+    this.app.get('/games/2048-embed.html', (_req, res) => {
       const filePath = path.join(process.cwd(), 'public/games/2048-embed.html');
       logger.info(`Serving 2048 game from: ${filePath}`);
       res.sendFile(filePath);
     });
     
-    this.app.get('/games/doom-embed.html', (req, res) => {
+    this.app.get('/games/doom-embed.html', (_req, res) => {
       const filePath = path.join(process.cwd(), 'public/games/doom-embed.html');
       logger.info(`Serving doom game from: ${filePath}`);
       res.sendFile(filePath);
     });
     
-    this.app.get('/health', (req, res) => {
+    this.app.get('/games/duckrace-embed.html', (_req, res) => {
+      const filePath = path.join(process.cwd(), 'public/games/duckrace-embed.html');
+      logger.info(`Serving duck race game from: ${filePath}`);
+      res.sendFile(filePath);
+    });
+    
+    this.app.get('/health', (_req, res) => {
       res.json({ status: 'ok' });
     });
     
@@ -79,16 +92,16 @@ export class EmbeddedAppServer {
         const channelId = channelMatch[1];
         const session = this.gameSessions.get(channelId);
         if (session) {
-          res.json({ game: session.game });
+          res.json({ game: session.game, gameData: session.gameData || null });
           return;
         }
       }
       
-      res.json({ game: null });
+      res.json({ game: null, gameData: null });
     });
 
     // Config endpoint
-    this.app.get('/discord-sdk-config', (req, res) => {
+    this.app.get('/discord-sdk-config', (_req, res) => {
       const clientId = process.env.DISCORD_CLIENT_ID || process.env.CLIENT_ID;
       res.json({
         clientId: clientId,

@@ -1,12 +1,11 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { BotCommand, CommandCategory } from '../../types';
 import { logger } from '../../utils/logger';
-import { createCanvas, loadImage, registerFont } from 'canvas';
-import path from 'path';
+import { createCanvas, loadImage } from 'canvas';
 import axios from 'axios';
 
 // Popular meme templates
-const MEME_TEMPLATES = {
+const MEME_TEMPLATES: Record<string, { name: string; url: string; textAreas: MemeTextArea[] }> = {
   drake: {
     name: 'Drake',
     url: 'https://i.imgflip.com/30b1gx.jpg',

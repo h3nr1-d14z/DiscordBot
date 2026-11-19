@@ -3,7 +3,6 @@ import { readdirSync } from 'fs';
 import path from 'path';
 import { config, validateConfig } from './config/config';
 import { logger } from './utils/logger';
-import { BotCommand } from './types';
 
 async function registerCommands() {
   try {

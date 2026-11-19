@@ -4,7 +4,7 @@ import { CommandHandler } from './handlers/commandHandler';
 import { EventHandler } from './handlers/eventHandler';
 import { database } from './services/database';
 import { HealthCheckServer } from './services/healthCheck';
-import { ReminderService, reminderService as reminderServiceInstance } from './services/reminderService';
+import { ReminderService } from './services/reminderService';
 import { embeddedAppServer } from './services/embeddedAppServerFixed';
 import { initializeActivityService } from './services/activityService';
 import { logger } from './utils/logger';
@@ -23,7 +23,7 @@ class DiscordBot {
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildVoiceStates, // voice-state caching needed by embedded-activity games
       ],
       partials: [
         Partials.Channel,

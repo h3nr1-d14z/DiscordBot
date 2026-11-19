@@ -357,7 +357,6 @@ const command: BotCommand = {
 async function startBattlePhase(interaction: any, game: Battleship, player1: User, player2: User, gameId: string) {
   const state = game.getState();
   const currentPlayer = state.currentTurn === player1.id ? player1 : player2;
-  const isPlayer1Turn = state.currentTurn === player1.id;
 
   const embed = new EmbedBuilder()
     .setTitle('⚓ Battleship - Battle Phase')
@@ -456,7 +455,7 @@ async function startBattlePhase(interaction: any, game: Battleship, player1: Use
     }
   });
 
-  collector.on('end', async (_collected, reason) => {
+  collector.on('end', async (_collected: unknown, reason: string) => {
     if (reason === 'time') {
       activeGames.delete(gameId);
       await interaction.followUp({

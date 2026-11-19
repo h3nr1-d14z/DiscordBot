@@ -5,7 +5,6 @@ import { BotCommand, CommandCategory } from '../types';
 const categoryEmojis: Record<CommandCategory, string> = {
   [CommandCategory.Fun]: '🎉',
   [CommandCategory.Games]: '🎮',
-  [CommandCategory.Music]: '🎵',
   [CommandCategory.Utility]: '🛠️',
   [CommandCategory.Economy]: '💰',
   [CommandCategory.Moderation]: '👮',
@@ -13,7 +12,6 @@ const categoryEmojis: Record<CommandCategory, string> = {
 
 const categoryOrder = [
   CommandCategory.Utility,
-  CommandCategory.Music,
   CommandCategory.Games,
   CommandCategory.Fun,
   CommandCategory.Economy,
@@ -59,7 +57,7 @@ async function loadCommands(): Promise<Map<CommandCategory, CommandInfo[]>> {
             name: command.data.name,
             description: command.data.description,
             category: command.category,
-            options: command.data.options?.map(opt => ({
+            options: command.data.options?.map((opt: { name: string; description: string; required?: boolean }) => ({
               name: opt.name,
               description: opt.description,
               required: opt.required || false,
@@ -228,5 +226,5 @@ export async function generateCommandDocs(): Promise<void> {
 
 // Run if called directly
 if (require.main === module) {
-  generateCommandDocs().catch(console.error);
+  generateCommandDocs().then(() => process.exit(0)).catch(console.error);
 }

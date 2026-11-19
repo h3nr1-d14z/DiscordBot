@@ -1,11 +1,10 @@
 # Discord Fun Bot - Command Reference
 
-> 📝 This documentation is auto-generated. Last updated: 2025-07-29T19:46:34.291Z
+> 📝 This documentation is auto-generated. Last updated: 2026-11-19T03:09:59.177Z
 
 ## Table of Contents
 
 - [🛠️ Utility Commands](#utility-commands)
-- [🎵 Music Commands](#music-commands)
 - [🎮 Games Commands](#games-commands)
 - [🎉 Fun Commands](#fun-commands)
 - [💰 Economy Commands](#economy-commands)
@@ -93,151 +92,6 @@
 
 ---
 
-### 🎵 Music Commands
-
-#### `/loop`
-
-**Description:** Set the loop mode
-
-**Cooldown:** 3 seconds
-
-**Options:**
-
-- `mode` *(required)*: Loop mode
-  - Choices: `Off`, `Track`, `Queue`
-
-**Usage:**
-```
-/loop [mode]
-```
-
----
-
-#### `/nowplaying`
-
-**Description:** Show the currently playing song
-
-**Cooldown:** 5 seconds
-
-**Usage:**
-```
-/nowplaying
-```
-
----
-
-#### `/pause`
-
-**Description:** Pause the current song
-
-**Cooldown:** 3 seconds
-
-**Usage:**
-```
-/pause
-```
-
----
-
-#### `/play`
-
-**Description:** Play a song from YouTube (search query or URL)
-
-**Cooldown:** 3 seconds
-
-**Options:**
-
-- `query` *(required)*: Song name to search or YouTube URL
-
-**Usage:**
-```
-/play [query]
-```
-
----
-
-#### `/queue`
-
-**Description:** Show the music queue
-
-**Cooldown:** 5 seconds
-
-**Usage:**
-```
-/queue
-```
-
----
-
-#### `/resume`
-
-**Description:** Resume the paused song
-
-**Cooldown:** 3 seconds
-
-**Usage:**
-```
-/resume
-```
-
----
-
-#### `/shuffle`
-
-**Description:** Shuffle the music queue
-
-**Cooldown:** 5 seconds
-
-**Usage:**
-```
-/shuffle
-```
-
----
-
-#### `/skip`
-
-**Description:** Skip the current song
-
-**Cooldown:** 3 seconds
-
-**Usage:**
-```
-/skip
-```
-
----
-
-#### `/stop`
-
-**Description:** Stop the music and clear the queue
-
-**Cooldown:** 3 seconds
-
-**Usage:**
-```
-/stop
-```
-
----
-
-#### `/volume`
-
-**Description:** Adjust the music volume
-
-**Cooldown:** 3 seconds
-
-**Options:**
-
-- `level` *(required)*: Volume level (0-100)
-
-**Usage:**
-```
-/volume [level]
-```
-
----
-
 ### 🎮 Games Commands
 
 #### `/2048`
@@ -288,17 +142,6 @@
 
 ---
 
-#### `/blackjack`
-
-**Description:** Play Blackjack against the dealer!
-
-**Usage:**
-```
-/blackjack
-```
-
----
-
 #### `/chess`
 
 **Description:** Play Chess against another player!
@@ -331,13 +174,20 @@
 
 ---
 
-#### `/dice`
+#### `/doom`
 
-**Description:** Roll the dice and bet on the outcome! 🎲
+**Description:** Play DOOM!
+
+**Cooldown:** 5 seconds
+
+**Options:**
+
+- `text` *(optional)*: Play text-based Doom in Discord chat
+- `embed` *(optional)*: Play DOOM in an embedded activity (requires voice channel)
 
 **Usage:**
 ```
-/dice
+/doom (text) (embed)
 ```
 
 ---
@@ -374,17 +224,6 @@
 
 ---
 
-#### `/poker`
-
-**Description:** Start a Texas Hold'em poker game! (2-8 players)
-
-**Usage:**
-```
-/poker
-```
-
----
-
 #### `/rps`
 
 **Description:** Play Rock Paper Scissors!
@@ -399,21 +238,6 @@
 **Usage:**
 ```
 /rps (opponent) (bet)
-```
-
----
-
-#### `/slots`
-
-**Description:** Play the slot machine! 🎰
-
-**Options:**
-
-- `bet` *(optional)*: Amount to bet (10-100 credits)
-
-**Usage:**
-```
-/slots (bet)
 ```
 
 ---
@@ -463,26 +287,6 @@
 **Usage:**
 ```
 /tictactoe (opponent)
-```
-
----
-
-#### `/trivia`
-
-**Description:** Play a trivia game!
-
-**Cooldown:** 10 seconds
-
-**Options:**
-
-- `category` *(optional)*: Choose a trivia category
-  - Choices: `General Knowledge`, `Books`, `Film`, `Music`, `Video Games`, `Science & Nature`, `Computers`, `Sports`, `Geography`, `History`, `Animals`, `Anime & Manga`
-- `difficulty` *(optional)*: Choose difficulty level
-  - Choices: `Easy`, `Medium`, `Hard`
-
-**Usage:**
-```
-/trivia (category) (difficulty)
 ```
 
 ---
@@ -547,6 +351,17 @@
 **Usage:**
 ```
 /activity [type]
+```
+
+---
+
+#### `/duckrace`
+
+**Description:** Start a duck race! Decide if ducks should eat or not! 🦆
+
+**Usage:**
+```
+/duckrace
 ```
 
 ---
@@ -636,14 +451,13 @@
 
 ## Command Statistics
 
-**Total Commands:** 40
+**Total Commands:** 27
 
 **By Category:**
 
 - 🛠️ Utility: 5 commands
-- 🎵 Music: 10 commands
-- 🎮 Games: 18 commands
-- 🎉 Fun: 5 commands
+- 🎮 Games: 14 commands
+- 🎉 Fun: 6 commands
 - 💰 Economy: 2 commands
 
 ## Legend

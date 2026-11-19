@@ -645,7 +645,7 @@ async function saveGameStats(userId: string, state: GameState) {
 async function playEmbedded(interaction: ChatInputCommandInteraction) {
   // Check if user is in a voice channel
   const member = interaction.member;
-  if (!member || typeof member === 'string' || !member.voice.channel) {
+  if (!member || typeof member === 'string' || !('voice' in member) || !member.voice.channel) {
     await interaction.reply({
       content: '❌ You must be in a voice channel to start an embedded activity!',
       ephemeral: true

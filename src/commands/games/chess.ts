@@ -430,11 +430,6 @@ class Chess {
     return null;
   }
 
-  private squareToNotation(square: Square): string {
-    const [row, col] = square;
-    return String.fromCharCode('a'.charCodeAt(0) + col) + (8 - row);
-  }
-
   renderBoard(): string {
     let board = '```\n  a b c d e f g h\n';
     

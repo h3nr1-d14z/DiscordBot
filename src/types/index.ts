@@ -19,7 +19,6 @@ export interface BotEvent {
 export enum CommandCategory {
   Fun = 'fun',
   Games = 'games',
-  Music = 'music',
   Utility = 'utility',
   Economy = 'economy',
   Moderation = 'moderation',
@@ -58,7 +57,6 @@ export interface ActiveGame {
 export enum GameType {
   TicTacToe = 'tictactoe',
   RockPaperScissors = 'rps',
-  Trivia = 'trivia',
   ConnectFour = 'connect4',
   NumberGuess = 'numberguess',
   WordChain = 'wordchain',
@@ -66,15 +64,6 @@ export enum GameType {
   Hangman = 'hangman',
   Memory = 'memory',
   Snake = 'snake',
-}
-
-export interface TriviaQuestion {
-  category: string;
-  type: string;
-  difficulty: string;
-  question: string;
-  correct_answer: string;
-  incorrect_answers: string[];
 }
 
 export interface GameResult {

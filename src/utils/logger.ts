@@ -6,7 +6,7 @@ const logDir = path.join(process.cwd(), 'logs');
 // Safe stringify function to handle circular references
 const safeStringify = (obj: any): string => {
   const cache = new Set();
-  return JSON.stringify(obj, (key, value) => {
+  return JSON.stringify(obj, (_key, value) => {
     if (typeof value === 'object' && value !== null) {
       if (cache.has(value)) {
         return '[Circular]';
@@ -16,10 +16,10 @@ const safeStringify = (obj: any): string => {
     // Handle Error objects specially
     if (value instanceof Error) {
       return {
+        ...value,
         message: value.message,
         stack: value.stack,
-        name: value.name,
-        ...value
+        name: value.name
       };
     }
     return value;

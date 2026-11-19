@@ -124,7 +124,7 @@ const command: BotCommand = {
     });
     
     const response = await interaction.reply({
-      content: isVsBot ? null : `${opponent}, you have been challenged!`,
+      content: isVsBot ? undefined : `${opponent}, you have been challenged!`,
       embeds: [embed],
       components: [row],
       fetchReply: true
@@ -241,8 +241,8 @@ async function handleGameEnd(
   isVsBot: boolean,
   opponent: User | null
 ) {
-  const p1Choice = gameData.player1.choice!;
-  const p2Choice = gameData.player2.choice!;
+  const p1Choice = gameData.player1.choice! as Choice;
+  const p2Choice = gameData.player2.choice! as Choice;
   
   let result: 'win' | 'lose' | 'draw';
   let winnerId: string | null = null;

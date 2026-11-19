@@ -230,16 +230,16 @@ function generateLevel(game: DoomGame) {
   // Generate items
   const itemCount = Math.floor(Math.random() * 3) + 2;
   for (let i = 0; i < itemCount; i++) {
-    let x, y;
+    let x: number, y: number;
     do {
       x = Math.floor(Math.random() * MAP_SIZE);
       y = Math.floor(Math.random() * MAP_SIZE);
     } while (
-      game.map[y][x] !== '.' || 
+      game.map[y][x] !== '.' ||
       (x === game.playerX && y === game.playerY) ||
       game.monsters.some(m => m.x === x && m.y === y)
     );
-    
+
     const types = Object.keys(itemTypes) as Array<keyof typeof itemTypes>;
     const type = types[Math.floor(Math.random() * types.length)];
     const itemData = itemTypes[type];
@@ -421,13 +421,13 @@ function handleShooting(game: DoomGame) {
   let nearestMonster: Monster | null = null;
   let minDistance = Infinity;
   
-  game.monsters.forEach(monster => {
+  for (const monster of game.monsters) {
     const distance = Math.abs(monster.x - game.playerX) + Math.abs(monster.y - game.playerY);
     if (distance < minDistance && distance <= 3) {
       minDistance = distance;
       nearestMonster = monster;
     }
-  });
+  }
   
   if (nearestMonster) {
     nearestMonster.health -= 25;

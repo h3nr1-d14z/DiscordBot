@@ -12,7 +12,6 @@ import { BotCommand, CommandCategory } from '../../types';
 const categoryEmojis: Record<CommandCategory, string> = {
   [CommandCategory.Fun]: '🎉',
   [CommandCategory.Games]: '🎮',
-  [CommandCategory.Music]: '🎵',
   [CommandCategory.Utility]: '🛠️',
   [CommandCategory.Economy]: '💰',
   [CommandCategory.Moderation]: '👮',
@@ -21,7 +20,6 @@ const categoryEmojis: Record<CommandCategory, string> = {
 const categoryDescriptions: Record<CommandCategory, string> = {
   [CommandCategory.Fun]: 'Fun and entertainment commands',
   [CommandCategory.Games]: 'Interactive games to play',
-  [CommandCategory.Music]: 'Music player commands',
   [CommandCategory.Utility]: 'Useful utility commands',
   [CommandCategory.Economy]: 'Economy and currency system',
   [CommandCategory.Moderation]: 'Server moderation tools',

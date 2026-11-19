@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, User, StringSelectMenuBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, StringSelectMenuBuilder } from 'discord.js';
 import { BotCommand, CommandCategory } from '../../types';
 import { database } from '../../services/database';
 import { logger } from '../../utils/logger';
@@ -38,7 +38,7 @@ const CARD_EMOJIS = {
   wild: '🌈'
 };
 
-const VALUE_DISPLAY = {
+const VALUE_DISPLAY: Partial<Record<CardValue, string>> = {
   skip: '⛔',
   reverse: '🔄',
   draw2: '+2',
@@ -625,7 +625,7 @@ async function startGamePhase(interaction: any, game: Uno, gameId: string) {
     }
   });
 
-  gameCollector.on('end', async (_collected, reason) => {
+  gameCollector.on('end', async (_collected: unknown, reason: string) => {
     if (reason === 'time') {
       activeGames.delete(gameId);
       await interaction.followUp({
@@ -635,7 +635,7 @@ async function startGamePhase(interaction: any, game: Uno, gameId: string) {
   });
 }
 
-function createGameEmbed(game: Uno, viewerId: string): EmbedBuilder {
+function createGameEmbed(game: Uno, _viewerId: string): EmbedBuilder {
   const state = game.getState();
   const currentPlayer = state.players[state.currentPlayerIndex];
   

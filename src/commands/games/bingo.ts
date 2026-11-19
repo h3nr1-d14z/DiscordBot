@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, User, AttachmentBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, AttachmentBuilder } from 'discord.js';
 import { BotCommand, CommandCategory } from '../../types';
 import { database } from '../../services/database';
 import { logger } from '../../utils/logger';
@@ -557,7 +557,6 @@ function createLobbyButtons(): ActionRowBuilder<ButtonBuilder> {
 
 async function startBingoGame(interaction: any, game: Bingo, gameId: string) {
   const updateDisplay = async () => {
-    const state = game.getState();
     const embed = createGameEmbed(game);
     const buttons = createGameButtons(game);
 
@@ -652,7 +651,7 @@ async function startBingoGame(interaction: any, game: Bingo, gameId: string) {
     }
   });
 
-  gameCollector.on('end', async (_collected, reason) => {
+  gameCollector.on('end', async (_collected: unknown, reason: string) => {
     if (reason === 'time') {
       game.cleanup();
       activeGames.delete(gameId);

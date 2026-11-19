@@ -86,7 +86,6 @@ discord-fun-bot/
 ## 🔮 Future Features (See [ROADMAP.md](docs/ROADMAP.md))
 
 ### Phase 1 (Q1 2025):
-- Trivia quiz system
 - Rock Paper Scissors
 - Full economy implementation
 - Shop system

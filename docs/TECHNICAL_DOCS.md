@@ -64,12 +64,6 @@ CREATE TABLE active_games (
 - AI uses minimax algorithm for bot moves
 - Game state stored in memory with timeout
 
-### Trivia System
-- Questions fetched from Open Trivia Database API
-- Categories: General, Science, History, Entertainment, etc.
-- Difficulty levels: Easy, Medium, Hard
-- Points based on difficulty and response time
-
 ### Economy System
 - Starting balance: 100 coins
 - Daily reward: 50-200 coins (with streak bonus)
@@ -79,10 +73,9 @@ CREATE TABLE active_games (
 ## API Integrations
 
 ### External APIs
-1. **Open Trivia Database**: `https://opentdb.com/api.php`
-2. **Joke API**: `https://v2.jokeapi.dev/joke/`
-3. **Meme API**: `https://meme-api.com/gimme`
-4. **Weather API**: OpenWeatherMap
+1. **Joke API**: `https://v2.jokeapi.dev/joke/`
+2. **Meme API**: `https://meme-api.com/gimme`
+3. **Weather API**: OpenWeatherMap
 
 ### Rate Limiting
 - Command cooldowns per user

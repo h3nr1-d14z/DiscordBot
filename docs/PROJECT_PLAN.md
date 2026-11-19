@@ -44,7 +44,6 @@ discord-bot/
 ## Core Features
 
 ### 1. Games
-- **Trivia Quiz**: Multiple choice questions with categories
 - **Tic-Tac-Toe**: Play against bot or another user
 - **Rock Paper Scissors**: Classic game with stats tracking
 - **Word Chain**: Word association game
@@ -90,8 +89,7 @@ discord-bot/
 1. Implement Tic-Tac-Toe
 2. Implement Rock Paper Scissors
 3. Implement Number Guessing
-4. Implement Trivia system
-5. Add game statistics tracking
+4. Add game statistics tracking
 
 ### Phase 3: Fun Commands (Week 3)
 1. Implement 8ball, jokes, dice roll

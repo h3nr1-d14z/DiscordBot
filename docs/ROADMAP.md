@@ -109,8 +109,6 @@ This roadmap outlines the planned features and improvements for the Discord Fun 
   - Speed rounds
 
 - [ ] **Card Games**
-  - Blackjack
-  - Poker (Texas Hold'em)
   - Uno-style game
 
 ### 🎮 RPG Elements
@@ -123,11 +121,6 @@ This roadmap outlines the planned features and improvements for the Discord Fun 
 ## Phase 4: Advanced Features (Q4 2025)
 
 ### 🎵 Music Integration
-- [ ] **Music Trivia**
-  - Guess the song games
-  - Artist trivia
-  - Lyrics completion
-
 - [ ] **Rhythm Games**
   - Button-based rhythm challenges
   - Beat matching games
@@ -200,15 +193,12 @@ This section tracks features requested by the community:
 - [ ] Reminder system with natural language
 - [ ] Birthday tracking and announcements
 - [ ] Server event calendar
-- [ ] Collaborative playlists
 - [ ] Pet system
 - [ ] Fishing mini-game
-- [ ] Casino games (Slots, Roulette)
 
 ## Version Planning
 
 ### v1.1 (February 2025)
-- Trivia system
 - Economy implementation
 - Basic shop
 

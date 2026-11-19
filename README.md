@@ -10,7 +10,6 @@ A feature-rich Discord bot with games, fun commands, and interactive features.
 - 📊 **Leveling System**: XP and levels based on activity
 - 🎁 **Interactive**: Polls, giveaways, and more
 - 📋 **ClickUp Integration**: Task management, reminders, and productivity features
-- 🎵 **Music**: Play music from YouTube (requires additional setup)
 
 ## Setup
 
@@ -90,7 +89,6 @@ Edit `.env` file:
 - `/hangman` - Guess the word with solo and challenge modes
 - `/memory` - Memory match card game with different difficulties
 - `/rps` - Rock Paper Scissors
-- `/trivia` - Play trivia quiz
 
 ### Fun
 - `/8ball` - Ask the magic 8-ball

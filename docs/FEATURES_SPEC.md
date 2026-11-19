@@ -2,17 +2,6 @@
 
 ## Games Detailed Specifications
 
-### 1. Trivia Quiz
-**Command**: `/trivia [category] [difficulty]`
-- **Categories**: General, Science, Sports, History, Entertainment, Geography
-- **Difficulties**: Easy (10 coins), Medium (20 coins), Hard (30 coins)
-- **Gameplay**:
-  - 15 seconds to answer each question
-  - Multiple choice with 4 options
-  - React with emoji (1️⃣, 2️⃣, 3️⃣, 4️⃣) to answer
-  - Streak bonus for consecutive correct answers
-  - Leaderboard tracking
-
 ### 2. Tic-Tac-Toe
 **Command**: `/tictactoe [@opponent]`
 - **Modes**: 

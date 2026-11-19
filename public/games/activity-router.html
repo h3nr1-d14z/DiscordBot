@@ -67,9 +67,7 @@
             { id: 'doom',     icon: '🔫', name: 'DOOM',      tag: 'FPS classic',  glow: '#f23f43' },
             { id: 'snake',    icon: '🐍', name: 'Snake',     tag: 'arcade',       glow: '#57f287' },
             { id: '2048',     icon: '🔢', name: '2048',      tag: 'puzzle',       glow: '#fee75c' },
-            { id: 'tictactoe',icon: '❌', name: 'Tic-Tac-Toe', tag: 'vs AI',      glow: '#00d4ff', badge: 'new' },
-            { id: 'memory',   icon: '🧠', name: 'Memory',    tag: 'match pairs',  glow: '#eb459e', badge: 'new' },
-            { id: 'hangman',  icon: '🪢', name: 'Hangman',   tag: 'word game',    glow: '#ff9f43', badge: 'new' },
+            { id: 'tictactoe',icon: '❌', name: 'Tic-Tac-Toe', tag: 'duel a friend', glow: '#00d4ff', badge: 'multi' },
         ];
         document.getElementById('grid').innerHTML = GAMES.map(g => `
             <a class="card" href="/games/${g.id}/" style="--glow:${g.glow}">

@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { logger } from '../utils/logger';
 import { attachHexZap } from './hexzapServer';
+import { attachTicTacToe } from './tictactoeServer';
 import http from 'http';
 
 export class EmbeddedAppServer {
@@ -86,6 +87,7 @@ export class EmbeddedAppServer {
       try {
         this.server = this.app.listen(this.port, () => {
           attachHexZap(this.server!);
+          attachTicTacToe(this.server!);
           logger.info(`Embedded app server running on port ${this.port}`);
           resolve();
         });

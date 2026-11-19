@@ -13,8 +13,14 @@ const handler = new CommandHandler();
 const commands = await handler.loadCommandsForRegistration();
 const names = () => commands.map(c => c.data.name).join(', ');
 
+// Entry Point commands (type 4 / user-install) must be re-sent verbatim in any
+// bulk update, or Discord rejects the whole PUT with code 50240.
+const existing = await rest.get(Routes.applicationCommands(clientId));
+const entryPoints = existing.filter(c => c.type === 4 || (c.integration_types || []).includes(1));
+for (const ep of entryPoints) console.log(`[global] preserving Entry Point: ${ep.name}`);
+
 // 1) global: bulk-overwrite with the real set
-await rest.put(Routes.applicationCommands(clientId), { body: commands });
+await rest.put(Routes.applicationCommands(clientId), { body: [...commands, ...entryPoints] });
 console.log(`[global] synced ${commands.length} commands: ${names()}`);
 
 // 2) guild scope: wipe everywhere the bot can see

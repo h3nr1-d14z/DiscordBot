@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Caro — 5 in a row</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: system-ui, sans-serif; color: #e8ecf3; overflow: hidden;
+    background: radial-gradient(ellipse at 50% -20%, #2a2438 0%, #12101a 55%, #0a0910 100%);
+  }
+  .wrap { width: min(94vw, 480px); text-align: center; }
+  h1 {
+    font-size: 34px; font-weight: 900; letter-spacing: 3px; margin-bottom: 4px;
+    background: linear-gradient(90deg, #23a55a, #3fc1ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { color: #8b93a7; font-size: 13px; margin-bottom: 18px; }
+
+  /* ---- menu ---- */
+  .menu .field { margin-bottom: 14px; }
+  .menu input {
+    width: 100%; padding: 13px 16px; border-radius: 12px; font-size: 16px;
+    border: 1px solid #343049; background: #1b1826; color: #e8ecf3; text-align: center;
+    letter-spacing: 1px; outline: none; transition: border-color .2s;
+  }
+  .menu input:focus { border-color: #23a55a; }
+  .menu .row { display: flex; gap: 10px; }
+  .menu button {
+    flex: 1; padding: 13px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: transform .15s, box-shadow .2s, filter .2s;
+  }
+  .menu button:hover { transform: translateY(-2px); filter: brightness(1.15); }
+  .menu button:active { transform: translateY(0); }
+  #btn-create { background: linear-gradient(135deg, #23a55a, #1d8f4d); color: #fff; box-shadow: 0 6px 18px -6px #23a55a88; }
+  #btn-join { background: #26223a; color: #c7cbe0; }
+  .menu .err { color: #f23f43; font-size: 13px; min-height: 18px; margin-top: 10px; }
+
+  /* ---- lobby ---- */
+  .code {
+    font-size: 52px; font-weight: 900; letter-spacing: 10px; margin: 8px 0 2px;
+    color: #3fc1ff; text-shadow: 0 0 24px #3fc1ff55; animation: codePulse 2.4s ease-in-out infinite;
+  }
+  @keyframes codePulse { 50% { text-shadow: 0 0 40px #3fc1ffaa; } }
+  .hint { color: #8b93a7; font-size: 13px; }
+  .wait-dots::after { content: ''; animation: dots 1.4s steps(4) infinite; }
+  @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+
+  /* ---- game ---- */
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
+  .player-card {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px;
+    background: #1b1826; border: 1px solid #343049; font-size: 14px; font-weight: 700;
+    transition: box-shadow .25s, border-color .25s, transform .25s;
+  }
+  .player-card.active { border-color: currentColor; box-shadow: 0 0 16px -4px currentColor; transform: translateY(-2px); }
+  .player-card .mk { font-size: 18px; font-weight: 900; }
+  .score-mid { text-align: center; font-size: 12px; color: #8b93a7; line-height: 1.5; }
+  .score-mid b { color: #e8ecf3; font-size: 14px; }
+
+  .board {
+    display: grid; grid-template-columns: repeat(var(--cols, 15), 1fr); gap: 3px;
+    background: #1b1826; padding: 8px; border-radius: 16px; border: 1px solid #2c2840;
+    box-shadow: 0 20px 50px -20px #000000cc;
+  }
+  .cell {
+    aspect-ratio: 1; border-radius: 6px; background: #211d30; position: relative;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background .18s, transform .12s;
+  }
+  .cell:hover:not(.taken):not(.locked) { background: #2a2540; }
+  .cell:active:not(.taken):not(.locked) { transform: scale(.96); }
+  .cell.taken { cursor: default; }
+  .cell.locked { cursor: not-allowed; }
+  .cell svg { width: 62%; height: 62%; overflow: visible; }
+  .cell .stroke {
+    fill: none; stroke: currentColor; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: var(--len); stroke-dashoffset: var(--len);
+    animation: draw .3s cubic-bezier(.4, 0, .2, 1) forwards;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .cell.ghost svg { opacity: .22; }
+  .cell.ghost .stroke { animation: none; stroke-dashoffset: 0; }
+  .cell.win { animation: winCell .9s cubic-bezier(.3, 0, .3, 1.4); }
+  @keyframes winCell { 30% { transform: scale(1.12); } }
+  .cell.dim { opacity: .35; transition: opacity .4s; }
+
+  /* win line overlay */
+  .strike {
+    position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  }
+  .strike line {
+    stroke-width: 7; stroke-linecap: round; stroke-dasharray: 600; stroke-dashoffset: 600;
+    animation: strike .45s .25s cubic-bezier(.5, 0, .3, 1) forwards;
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+  @keyframes strike { to { stroke-dashoffset: 0; } }
+
+  .status {
+    height: 28px; margin: 14px 0 4px; font-size: 15px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: statusPop .3s cubic-bezier(.3, 1.4, .6, 1);
+  }
+  @keyframes statusPop { from { transform: scale(.8); opacity: 0; } }
+  #btn-again {
+    margin-top: 6px; padding: 11px 34px; border: 0; border-radius: 12px;
+    background: linear-gradient(135deg, #3fc1ff, #2b9fd8); color: #fff; font-weight: 700;
+    font-size: 14px; letter-spacing: 1px; cursor: pointer; display: none;
+    transition: transform .15s, filter .2s;
+  }
+  #btn-again.show { display: inline-block; animation: statusPop .35s cubic-bezier(.3, 1.4, .6, 1); }
+  #btn-again:hover { transform: translateY(-2px); filter: brightness(1.15); }
+
+  .hidden { display: none !important; }
+  .shake { animation: shake .35s; }
+  @keyframes shake {
+    20% { transform: translateX(-6px); } 40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- MENU -->
+  <div id="menu" class="menu">
+    <h1>CARO</h1>
+    <div class="sub">Caro — five in a row wins, same activity</div>
+    <div class="field"><input id="name" placeholder="Your name" maxlength="14"></div>
+    <div class="row">
+      <button id="btn-create">CREATE ROOM</button>
+      <button id="btn-join">JOIN</button>
+    </div>
+    <div class="field" style="margin-top:10px"><input id="code" placeholder="ROOM CODE" maxlength="4" style="text-transform:uppercase"></div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="lobby" class="hidden">
+    <h1>CARO</h1>
+    <div class="code" id="code-show">----</div>
+    <div class="hint">Share this code<span class="wait-dots" id="waitd"></span> waiting for opponent</div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="hidden">
+    <div class="topbar">
+      <div class="player-card" id="card-x"><span class="mk" style="color:#23a55a">✕</span><span id="nm-x"></span></div>
+      <div class="score-mid" id="score">0 · 0</div>
+      <div class="player-card" id="card-o"><span id="nm-o"></span><span class="mk" style="color:#3fc1ff">◯</span></div>
+    </div>
+    <div style="position:relative">
+      <div class="board" id="board"></div>
+      <svg class="strike" id="strike" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="status" id="status"></div>
+    <button id="btn-again">PLAY AGAIN</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const X_COLOR = '#23a55a', O_COLOR = '#3fc1ff';
+
+  const X_PATH = 'M20 20 L80 80 M80 20 L20 80';
+  const O_PATH = 'M50 18 A32 32 0 1 0 50 82 A32 32 0 1 0 50 18';
+  const PATH_LEN = { X: 227, O: 202 };
+
+  let ws = null, myMark = null, myName = '', phase = 'menu';
+
+  function markSvg(mark, ghost) {
+    const color = mark === 1 ? X_COLOR : O_COLOR;
+    const path = mark === 1 ? X_PATH : O_PATH;
+    return `<svg viewBox="0 0 100 100"><path class="stroke" style="color:${color};--len:${PATH_LEN[mark === 1 ? 'X' : 'O']}${ghost ? ';animation:none;stroke-dashoffset:0' : ''}" d="${path}"/></svg>`;
+  }
+
+  function buildBoard(cols = 15, rows = 15) {
+    const b = $('board');
+    b.style.setProperty('--cols', cols);
+    b.innerHTML = '';
+    for (let i = 0; i < cols * rows; i++) {
+      const c = document.createElement('div');
+      c.className = 'cell'; c.dataset.i = i;
+      c.onmouseenter = () => ghost(i, true);
+      c.onmouseleave = () => ghost(i, false);
+      c.onclick = () => { if (canPlay(i)) ws.send(JSON.stringify({ t: 'move', idx: i })); };
+      b.appendChild(c);
+    }
+    $('strike').innerHTML = '';
+  }
+
+  const myTurn = () => phase === 'play' && myMark && state.turn === myMark;
+  let state = { marks: new Array(225).fill(0), turn: 'X' };
+  const canPlay = i => myTurn() && !state.marks[i];
+
+  function ghost(i, on) {
+    const c = $('board').children[i];
+    if (!c || c.classList.contains('taken') || !canPlay(i)) return;
+    c.innerHTML = on ? markSvg(myMark === 'X' ? 1 : 2, true) : '';
+    c.classList.toggle('ghost', on);
+  }
+
+  function render(m) {
+    state = m;
+    phase = m.phase;
+    // players
+    const px = m.players.find(p => p.mark === 'X'), po = m.players.find(p => p.mark === 'O');
+    $('nm-x').textContent = px ? px.nm : '—';
+    $('nm-o').textContent = po ? po.nm : 'waiting…';
+    $('score').innerHTML = `<b>${m.scores.X}</b> wins · <b>${m.scores.O}</b> · ${m.scores.draw} draw`;
+    $('card-x').classList.toggle('active', m.phase === 'play' && m.turn === 'X');
+    $('card-o').classList.toggle('active', m.phase === 'play' && m.turn === 'O');
+    $('card-x').style.color = $('card-o').style.color = '';
+
+    // cells
+    for (let i = 0; i < m.marks.length; i++) {
+      const c = $('board').children[i];
+      const v = m.marks[i];
+      if (v && !c.classList.contains('taken')) {
+        c.classList.add('taken');
+        c.innerHTML = markSvg(v);
+      } else if (!v) {
+        const playable = m.phase === 'play' && m.turn === myMark;
+        c.classList.toggle('locked', !playable);
+        c.classList.remove('ghost');
+        if (!c.classList.contains('taken')) c.innerHTML = '';
+      }
+    }
+    // strike line
+    $('strike').innerHTML = '';
+    if (m.line) {
+      const cs = [$('board').children[m.line[0]], $('board').children[m.line[m.line.length - 1]]];
+      const center = el => {
+        const b = $('board').getBoundingClientRect(), r = el.getBoundingClientRect();
+        return [((r.left + r.width / 2 - b.left) / b.width) * 100, ((r.top + r.height / 2 - b.top) / b.height) * 100];
+      };
+      const [x1, y1] = center(cs[0]), [x2, y2] = center(cs[1]);
+      const w = m.winner === 'X' ? X_COLOR : O_COLOR;
+      $('strike').innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:${w}"/>`;
+      m.line.forEach(i => $('board').children[i].classList.add('win'));
+      for (let i = 0; i < m.marks.length; i++) if (!m.line.includes(i)) $('board').children[i].classList.add('dim');
+    }
+
+    // status + again
+    const st = $('status'), ag = $('btn-again');
+    st.style.animation = 'none'; st.offsetHeight; st.style.animation = '';
+    if (m.phase === 'play') {
+      st.textContent = myTurn() ? 'YOUR TURN' : `${m.turn === 'X' ? (px?.nm || 'X') : (po?.nm || 'O')}'S TURN`;
+      st.style.color = m.turn === 'X' ? X_COLOR : O_COLOR;
+      ag.classList.remove('show');
+    } else if (m.phase === 'over') {
+      if (m.winner === 'draw') { st.textContent = 'DRAW'; st.style.color = '#8b93a7'; }
+      else {
+        const wn = m.winner === 'X' ? px?.nm : po?.nm;
+        const mine = m.winner === myMark;
+        st.textContent = mine ? 'YOU WIN!' : `${wn} WINS`;
+        st.style.color = m.winner === 'X' ? X_COLOR : O_COLOR;
+        if (!mine) $('board').classList.add('shake');
+        setTimeout(() => $('board').classList.remove('shake'), 400);
+      }
+      ag.classList.toggle('show', !!myMark && myMark === m.host);
+    } else {
+      st.textContent = '';
+    }
+  }
+
+  function show(id) {
+    for (const s of ['menu', 'lobby', 'game']) $(s).classList.toggle('hidden', s !== id);
+  }
+
+  function connect(name, code) {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/caro`);
+    ws.onopen = () => ws.send(JSON.stringify({ t: 'join', name, code }));
+    ws.onmessage = ev => {
+      const m = JSON.parse(ev.data);
+      if (m.you) myMark = m.you;
+      if (m.t === 'err') { $('err').textContent = m.msg; ws.close(); return; }
+      if (m.phase === 'wait') { $('code-show').textContent = m.code; show('lobby'); return; }
+      if (m.t === 'state') { if (phase !== 'game') { buildBoard(m.cols, m.rows); show('game'); } render(m); }
+    };
+    ws.onclose = () => {
+      if (phase !== 'over') { $('err').textContent = 'Disconnected — opponent left?'; show('menu'); }
+    };
+  }
+
+  $('btn-create').onclick = () => connect($('name').value.trim() || 'Player', '');
+  $('btn-join').onclick = () => {
+    const c = $('code').value.trim().toUpperCase();
+    if (c.length !== 4) { $('err').textContent = 'Code is 4 characters'; return; }
+    connect($('name').value.trim() || 'Player', c);
+  };
+  $('btn-again').onclick = () => ws.send(JSON.stringify({ t: 'again' }));
+  buildBoard();
+})();
+</script>
+</body>
+</html>

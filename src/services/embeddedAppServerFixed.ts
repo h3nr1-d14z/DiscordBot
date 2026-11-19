@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { logger } from '../utils/logger';
 import { attachHexZap } from './hexzapServer';
-import { attachTicTacToe } from './tictactoeServer';
+import { attachBoardGame } from './boardServer';
 import http from 'http';
 
 export class EmbeddedAppServer {
@@ -87,7 +87,8 @@ export class EmbeddedAppServer {
       try {
         this.server = this.app.listen(this.port, () => {
           attachHexZap(this.server!);
-          attachTicTacToe(this.server!);
+          attachBoardGame(this.server!, { path: '/tictactoe', label: 'tictactoe', cols: 3, rows: 3, winLen: 3 });
+          attachBoardGame(this.server!, { path: '/caro', label: 'caro', cols: 15, rows: 15, winLen: 5 });
           logger.info(`Embedded app server running on port ${this.port}`);
           resolve();
         });

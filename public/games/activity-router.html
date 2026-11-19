@@ -68,6 +68,7 @@
             { id: 'snake',    icon: '🐍', name: 'Snake',     tag: 'arcade',       glow: '#57f287' },
             { id: '2048',     icon: '🔢', name: '2048',      tag: 'puzzle',       glow: '#fee75c' },
             { id: 'tictactoe',icon: '❌', name: 'Tic-Tac-Toe', tag: 'duel a friend', glow: '#00d4ff', badge: 'multi' },
+            { id: 'caro',     icon: '⭕', name: 'Caro',      tag: '5 in a row',   glow: '#ff6b6b', badge: 'multi' },
         ];
         document.getElementById('grid').innerHTML = GAMES.map(g => `
             <a class="card" href="/games/${g.id}/" style="--glow:${g.glow}">

@@ -180,7 +180,8 @@ function encodeTiles(room: Room): string {
   return Buffer.from(arr).toString('base64');
 }
 
-function snapshot(room: Room) {
+function snapshot(room: Room, viewer: Player | null) {
+  const inGame = room.phase === 'playing' || room.phase === 'firing';
   return {
     t: 'state',
     phase: room.phase,
@@ -192,19 +193,23 @@ function snapshot(room: Room) {
     winner: room.winnerId
       ? { id: room.winnerId, name: room.players.get(room.winnerId)?.name ?? '' }
       : null,
-    players: [...room.players.values()].map(p => ({
-      id: p.id, nm: p.name, c: p.color,
-      x: +p.x.toFixed(2), y: +p.y.toFixed(2), a: +p.aim.toFixed(3),
-      alive: p.alive, lk: p.locked, w: p.wins, host: p.id === room.hostId,
-    })),
+    players: [...room.players.values()]
+      // blind: during play a client may only ever see its own position
+      .filter(p => !inGame || p.id === viewer?.id)
+      .map(p => ({
+        id: p.id, nm: p.name, c: p.color,
+        x: +p.x.toFixed(2), y: +p.y.toFixed(2), a: +p.aim.toFixed(3),
+        alive: p.alive, lk: p.locked, w: p.wins, host: p.id === room.hostId,
+      })),
   };
 }
 
 function broadcast(room: Room) {
   if (!room.players.size) return;
-  const msg = JSON.stringify(snapshot(room));
   for (const p of room.players.values()) {
-    if (p.ws.readyState === WebSocket.OPEN) p.ws.send(msg);
+    if (p.ws.readyState === WebSocket.OPEN) {
+      p.ws.send(JSON.stringify(snapshot(room, p)));
+    }
   }
 }
 
@@ -254,11 +259,12 @@ export function attachHexZap(server: Server) {
           const id = Math.random().toString(36).slice(2, 9);
           let sx = 0, sy = 0;
           if (room.phase === 'lobby' || room.phase === 'over') {
-            // spawn near center ring 1
-            const spawnRing = 1;
-            const angle = Math.random() * Math.PI * 2;
-            sx = 1.5 * spawnRing * Math.cos(angle);
-            sy = Math.sqrt(3) * spawnRing * Math.sin(angle);
+            // spawn on actual ring-1 tile centers, shuffled so players don't stack
+            const ring1 = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]
+              .sort(() => Math.random() - 0.5);
+            const n = room.players.size % ring1.length;
+            const px = axialToPixel(ring1[n][0], ring1[n][1]);
+            sx = px.x; sy = px.y;
           } else {
             // mid-game join: drop on a random solid tile edge
             const solid = [...room.tiles.entries()].filter(([, t]) => t.state === 0);

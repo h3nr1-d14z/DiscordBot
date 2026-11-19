@@ -13,14 +13,17 @@ const handler = new CommandHandler();
 const commands = await handler.loadCommandsForRegistration();
 const names = () => commands.map(c => c.name).join(', ');
 
-// Entry Point commands (type 4 / user-install) must be re-sent verbatim in any
-// bulk update, or Discord rejects the whole PUT with code 50240.
+// Only type 4 commands are true Entry Points; integration_types containing 1 is
+// just the user-install flag (old commands have it too — keeping them caused
+// duplicate-name rejections and resurrected dead commands).
 const existing = await rest.get(Routes.applicationCommands(clientId));
-const entryPoints = existing.filter(c => c.type === 4 || (c.integration_types || []).includes(1));
+const entryPoints = existing.filter(c => c.type === 4);
+const epNames = entryPoints.map(c => c.name);
 for (const ep of entryPoints) console.log(`[global] preserving Entry Point: ${ep.name}`);
 
-// 1) global: bulk-overwrite with the real set
-await rest.put(Routes.applicationCommands(clientId), { body: [...commands, ...entryPoints] });
+// 1) global: bulk-overwrite with the real set (+ entry points, verbatim)
+const toSend = commands.filter(c => !epNames.includes(c.name));
+await rest.put(Routes.applicationCommands(clientId), { body: [...toSend, ...entryPoints] });
 console.log(`[global] synced ${commands.length} commands: ${names()}`);
 
 // 2) guild scope: wipe everywhere the bot can see

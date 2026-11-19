@@ -70,9 +70,6 @@
             { id: 'tictactoe',icon: '❌', name: 'Tic-Tac-Toe', tag: 'vs AI',      glow: '#00d4ff', badge: 'new' },
             { id: 'memory',   icon: '🧠', name: 'Memory',    tag: 'match pairs',  glow: '#eb459e', badge: 'new' },
             { id: 'hangman',  icon: '🪢', name: 'Hangman',   tag: 'word game',    glow: '#ff9f43', badge: 'new' },
-            { id: 'slots',    icon: '🎰', name: 'Slots',     tag: 'luck',         glow: '#ffd700', badge: 'new' },
-            { id: 'dice',     icon: '🎲', name: 'Dice',      tag: 'luck',         glow: '#b980ff', badge: 'new' },
-            { id: 'rps',      icon: '✊', name: 'RPS',       tag: 'vs AI',        glow: '#23a55a', badge: 'new' },
         ];
         document.getElementById('grid').innerHTML = GAMES.map(g => `
             <a class="card" href="/games/${g.id}/" style="--glow:${g.glow}">

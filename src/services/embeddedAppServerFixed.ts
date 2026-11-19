@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { logger } from '../utils/logger';
+import { attachHexZap } from './hexzapServer';
 import http from 'http';
 
 export class EmbeddedAppServer {
@@ -84,6 +85,7 @@ export class EmbeddedAppServer {
     return new Promise((resolve, reject) => {
       try {
         this.server = this.app.listen(this.port, () => {
+          attachHexZap(this.server!);
           logger.info(`Embedded app server running on port ${this.port}`);
           resolve();
         });

@@ -70,6 +70,10 @@
                 <span class="game-icon">🔫</span>
                 <span>DOOM</span>
             </button>
+            <button class="game-button" data-game="hexzap">
+                <span class="game-icon">⚡</span>
+                <span>HexZap</span>
+            </button>
         </div>
     </div>
     
@@ -78,7 +82,8 @@
             const gameMap = {
                 'snake': '/games/snake/',
                 '2048': '/games/2048/',
-                'doom': '/games/doom/'
+                'doom': '/games/doom/',
+                'hexzap': '/games/hexzap/'
             };
             
             const gameUrl = gameMap[game] || gameMap['snake'];

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>HexZap — blind laser duel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; background: #06070a; overflow: hidden;
+            font-family: 'Segoe UI', Roboto, sans-serif; color: #e7e9ea; }
+        #cv { width: 100vw; height: 100vh; display: block; }
+        .overlay {
+            position: fixed; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 14px;
+            background: rgba(6,7,10,0.96); z-index: 5; text-align: center; padding: 20px;
+        }
+        .hidden { display: none !important; }
+        h1 { color: #5865f2; font-size: min(12vw, 64px); letter-spacing: 0.12em; font-weight: 900; }
+        .sub { color: #b9bbbe; font-size: 14px; max-width: 520px; line-height: 1.5; }
+        input {
+            background: #1e1f22; color: #fff; border: 1px solid #3f4147;
+            padding: 12px 16px; border-radius: 8px; font-size: 16px; width: 220px;
+            text-align: center; text-transform: uppercase; outline: none;
+        }
+        input:focus { border-color: #5865f2; }
+        button {
+            background: #5865f2; color: #fff; border: none; padding: 12px 34px;
+            font-size: 16px; font-weight: 700; border-radius: 8px; cursor: pointer;
+        }
+        button:hover { background: #4752c4; }
+        button.ghost { background: transparent; border: 1px solid #4f545c; font-weight: 400; }
+        .row { display: flex; gap: 10px; align-items: center; }
+        #err { color: #f23f43; font-size: 14px; min-height: 18px; }
+        #hud {
+            position: fixed; top: 12px; left: 0; right: 0; display: flex;
+            justify-content: center; gap: 18px; font-size: 14px; color: #b9bbbe;
+            pointer-events: none; z-index: 3;
+        }
+        #hud b { color: #fff; }
+        #msg {
+            position: fixed; top: 38%; width: 100%; text-align: center; font-size: min(9vw, 56px);
+            font-weight: 900; color: #f23f43; pointer-events: none; z-index: 3;
+            text-shadow: 0 0 24px rgba(242,63,67,0.7);
+        }
+        #msg.info { color: #57f287; text-shadow: 0 0 24px rgba(87,242,135,0.5); }
+    </style>
+</head>
+<body>
+    <canvas id="cv"></canvas>
+    <div id="hud" class="hidden">
+        <span>Room <b id="hud-code"></b></span><span>Alive <b id="hud-alive"></b></span>
+        <span id="hud-phase"></span>
+    </div>
+    <div id="msg" class="hidden"></div>
+
+    <div class="overlay" id="menu">
+        <h1>HEXZAP</h1>
+        <div class="sub">Everyone is invisible. Move on a collapsing hex floor, lock your aim —
+            when the countdown hits zero <b>every laser fires at once</b>. Last one standing wins.</div>
+        <div class="row">
+            <input id="name" placeholder="Your name" maxlength="14">
+            <input id="code" placeholder="ROOM CODE" maxlength="5" style="text-transform:uppercase">
+        </div>
+        <div class="row">
+            <button id="btn-create">CREATE ROOM</button>
+            <button id="btn-join" class="ghost">JOIN</button>
+        </div>
+        <div id="err"></div>
+    </div>
+
+    <div class="overlay hidden" id="lobby">
+        <h1 id="lobby-code" style="color:#57f287"></h1>
+        <div class="sub">Share this code — players join with it. Need at least <b>2</b> players.</div>
+        <div id="lobby-list" class="sub"></div>
+        <button id="btn-start">START GAME</button>
+        <div id="lobby-wait" class="sub">Waiting for host…</div>
+    </div>
+
+    <div class="overlay hidden" id="over">
+        <h1 id="over-title" style="color:#fee75c"></h1>
+        <div class="sub" id="over-sub"></div>
+        <button id="btn-again" class="hidden">PLAY AGAIN</button>
+    </div>
+
+    <script>
+    (() => {
+        const cv = document.getElementById('cv');
+        const ctx = cv.getContext('2d');
+        const $ = id => document.getElementById(id);
+        const show = (id, on = true) => $(id).classList.toggle('hidden', !on);
+
+        const GRID_R = 6;
+        const SQ3 = Math.sqrt(3);
+        let ws = null, myId = null, S = null, lastTiles = null, tileStates = null;
+        let keys = {}, mouseX = 0, mouseY = 0, locked = false;
+
+        // --- connection ---
+        function connect(name, code) {
+            const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${proto}//${location.host}/hexzap`);
+            ws.onerror = () => { $('err').textContent = 'Cannot reach server'; };
+            ws.onmessage = ev => {
+                const m = JSON.parse(ev.data);
+                if (m.t === 'joined') {
+                    myId = m.you;
+                    $('hud-code').textContent = m.code;
+                    $('lobby-code').textContent = 'CODE: ' + m.code;
+                    show('menu', false); show('lobby');
+                } else if (m.t === 'noRoom') {
+                    $('err').textContent = 'Room not found — check the code';
+                } else if (m.t === 'full') {
+                    $('err').textContent = 'Room is full (8 max)';
+                } else if (m.t === 'state') {
+                    onState(m);
+                }
+            };
+            ws.onopen = () => ws.send(JSON.stringify({ t: 'join', name, code }));
+        }
+
+        function onState(m) {
+            if (m.tiles !== lastTiles) {
+                lastTiles = m.tiles;
+                tileStates = Uint8Array.from(atob(m.tiles), c => c.charCodeAt(0));
+            }
+            S = m;
+            const me = m.players.find(p => p.id === myId);
+            const inGame = m.phase === 'playing' || m.phase === 'firing';
+            show('lobby', m.phase === 'lobby');
+            show('over', m.phase === 'over');
+            show('hud', inGame);
+            if (m.phase === 'lobby') {
+                $('lobby-list').textContent = m.players.map(p => `${p.nm}${p.host ? ' (host)' : ''}`).join(' · ');
+                const iAmHost = me && me.host;
+                $('btn-start').classList.toggle('hidden', !iAmHost);
+                $('lobby-wait').classList.toggle('hidden', iAmHost);
+            } else if (m.phase === 'over') {
+                $('over-title').textContent = m.winner ? (m.winner.id === myId ? 'YOU WIN!' : m.winner.name + ' WINS') : 'NOBODY SURVIVED';
+                $('over-sub').textContent = 'Thanks for playing HexZap';
+                const iAmHost = me && me.host;
+                $('btn-again').classList.toggle('hidden', !iAmHost);
+            } else {
+                const secs = Math.max(0, Math.ceil((m.endsAt - Date.now()) / 1000));
+                $('hud-alive').textContent = m.alive;
+                if (m.phase === 'firing') { $('hud-phase').innerHTML = '<b>FIRE!</b>'; }
+                else $('hud-phase').textContent = `Lock aim & move — fire in ${secs}s`;
+                const msg = $('msg');
+                if (m.phase === 'firing') { msg.textContent = 'FIRE!'; show('msg'); msg.classList.remove('info'); }
+                else if (secs <= 3) { msg.textContent = secs; show('msg'); msg.classList.add('info'); }
+                else show('msg', false);
+            }
+        }
+
+        // --- input ---
+        addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') { locked = !locked; e.preventDefault(); } });
+        addEventListener('keyup', e => { keys[e.code] = false; });
+        cv.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+        cv.addEventListener('click', () => { locked = !locked; });
+
+        setInterval(() => {
+            if (!ws || ws.readyState !== 1 || !S || (S.phase !== 'playing')) return;
+            const mx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+            const my = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
+            // aim: mouse direction relative to my screen position
+            const me = S.players.find(p => p.id === myId);
+            let a = me ? me.a : 0;
+            if (me && (mouseX || mouseY)) {
+                const c = worldToScreen(me.x, me.y);
+                a = Math.atan2(mouseY - c.y, mouseX - c.x);
+            }
+            ws.send(JSON.stringify({ t: 'input', mx, my, a: +a.toFixed(3), lk: locked }));
+        }, 66);
+
+        // --- render ---
+        function resize() { cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio; ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0); }
+        addEventListener('resize', resize); resize();
+
+        // rebuild server ordering: q asc, then r asc within each q
+        let order = [];
+        for (let q = -GRID_R; q <= GRID_R; q++)
+            for (let r = Math.max(-GRID_R, -q - GRID_R); r <= Math.min(GRID_R, -q + GRID_R); r++)
+                order.push([q, r]);
+
+        let hexSize = 20;
+        function worldToScreen(x, y) {
+            return { x: cv.clientWidth / 2 + x * hexSize, y: cv.clientHeight / 2 + y * hexSize };
+        }
+
+        function drawHex(cx, cy, size, fill, stroke) {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const a = Math.PI / 180 * (60 * i);
+                const px = cx + size * Math.cos(a), py = cy + size * Math.sin(a);
+                i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+            }
+            ctx.closePath();
+            if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+            if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+        }
+
+        function render() {
+            requestAnimationFrame(render);
+            const W = cv.clientWidth, H = cv.clientHeight;
+            ctx.fillStyle = '#06070a'; ctx.fillRect(0, 0, W, H);
+            if (!S || !tileStates) return;
+            hexSize = Math.min(W, H) / (2 * GRID_R + 4);
+            const t = Date.now();
+            const blink = 0.5 + 0.5 * Math.sin(t / 90);
+
+            for (let i = 0; i < tileStates.length; i++) {
+                const st = tileStates[i];
+                if (st === 3) continue;
+                const [q, r] = order[i];
+                const cx = W / 2 + 1.5 * q * hexSize;
+                const cy = H / 2 + SQ3 * (r + q / 2) * hexSize;
+                if (st === 0) drawHex(cx, cy, hexSize * 0.92, '#141a26', '#232c3d');
+                else drawHex(cx, cy, hexSize * (0.92 - 0.1 * blink), `rgba(242,63,67,${0.25 + 0.45 * blink})`, '#f23f43');
+            }
+
+            const me = S.players.find(p => p.id === myId);
+
+            if (S.phase === 'firing') {
+                for (const l of S.lasers) {
+                    const c = worldToScreen(l.x, l.y);
+                    const len = Math.max(W, H) * 1.5;
+                    const grad = ctx.createLinearGradient(c.x, c.y, c.x + Math.cos(l.a) * len, c.y + Math.sin(l.a) * len);
+                    grad.addColorStop(0, 'rgba(255,80,80,0.95)'); grad.addColorStop(1, 'rgba(255,80,80,0)');
+                    ctx.strokeStyle = grad; ctx.lineWidth = 5;
+                    ctx.beginPath(); ctx.moveTo(c.x, c.y);
+                    ctx.lineTo(c.x + Math.cos(l.a) * len, c.y + Math.sin(l.a) * len); ctx.stroke();
+                    ctx.lineWidth = 1;
+                }
+            }
+
+            if (me && me.alive && S.phase !== 'lobby' && S.phase !== 'over') {
+                const c = worldToScreen(me.x, me.y);
+                // self glow
+                const g = ctx.createRadialGradient(c.x, c.y, 2, c.x, c.y, 26);
+                g.addColorStop(0, me.c); g.addColorStop(1, 'transparent');
+                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, 26, 0, 7); ctx.fill();
+                drawHex(c.x, c.y, hexSize * 0.34, me.c, '#fff');
+                ctx.fillStyle = '#fff'; ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(me.nm + ' (you)', c.x, c.y - hexSize * 0.6);
+                // aim line
+                const lineLen = hexSize * (GRID_R * 2.2);
+                ctx.setLineDash(locked ? [] : [6, 6]);
+                ctx.strokeStyle = locked ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.3)';
+                ctx.beginPath(); ctx.moveTo(c.x, c.y);
+                ctx.lineTo(c.x + Math.cos(me.a) * lineLen, c.y + Math.sin(me.a) * lineLen); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            if ((S.phase === 'lobby') && me) {
+                const c = worldToScreen(me.x, me.y);
+                drawHex(c.x, c.y, hexSize * 0.34, me.c, '#fff');
+                ctx.fillStyle = '#fff'; ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(me.nm + ' (you)', c.x, c.y - hexSize * 0.6);
+            }
+        }
+        render();
+
+        // --- menu wiring ---
+        $('btn-create').onclick = () => connect($('name').value || 'Player', '');
+        $('btn-join').onclick = () => {
+            const c = $('code').value.trim().toUpperCase();
+            if (c.length !== 5) { $('err').textContent = 'Enter a 5-char room code'; return; }
+            connect($('name').value || 'Player', c);
+        };
+        $('btn-start').onclick = () => ws && ws.send(JSON.stringify({ t: 'start' }));
+        $('btn-again').onclick = () => ws && ws.send(JSON.stringify({ t: 'again' }));
+    })();
+    </script>
+</body>
+</html>

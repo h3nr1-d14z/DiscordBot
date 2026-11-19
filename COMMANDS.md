@@ -1,6 +1,6 @@
 # Discord Fun Bot - Command Reference
 
-> 📝 This documentation is auto-generated. Last updated: 2026-11-19T03:09:59.177Z
+> 📝 This documentation is auto-generated. Last updated: 2026-11-19T04:38:33.812Z
 
 ## Table of Contents
 
@@ -355,17 +355,6 @@
 
 ---
 
-#### `/duckrace`
-
-**Description:** Start a duck race! Decide if ducks should eat or not! 🦆
-
-**Usage:**
-```
-/duckrace
-```
-
----
-
 #### `/joke`
 
 **Description:** Get a random joke
@@ -451,13 +440,13 @@
 
 ## Command Statistics
 
-**Total Commands:** 27
+**Total Commands:** 26
 
 **By Category:**
 
 - 🛠️ Utility: 5 commands
 - 🎮 Games: 14 commands
-- 🎉 Fun: 6 commands
+- 🎉 Fun: 5 commands
 - 💰 Economy: 2 commands
 
 ## Legend

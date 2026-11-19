@@ -8,7 +8,7 @@ export class EmbeddedAppServer {
   private app: express.Application;
   private server: http.Server | null = null;
   private port: number;
-  private gameSessions: Map<string, { game: string; timestamp: number; gameData?: any }> = new Map();
+  private gameSessions: Map<string, { game: string; timestamp: number }> = new Map();
 
   constructor(port: number = 3000) {
     this.port = port;
@@ -29,14 +29,6 @@ export class EmbeddedAppServer {
   createGameSession(channelId: string, game: string): void {
     this.gameSessions.set(channelId, { game, timestamp: Date.now() });
     logger.info(`Created game session for channel ${channelId}: ${game}`);
-  }
-  
-  setGameData(channelId: string, gameData: any): void {
-    const session = this.gameSessions.get(channelId);
-    if (session) {
-      session.gameData = gameData;
-      logger.info(`Set game data for channel ${channelId}`);
-    }
   }
 
   private setupServer() {
@@ -71,13 +63,7 @@ export class EmbeddedAppServer {
       logger.info(`Serving doom game from: ${filePath}`);
       res.sendFile(filePath);
     });
-    
-    this.app.get('/games/duckrace-embed.html', (_req, res) => {
-      const filePath = path.join(process.cwd(), 'public/games/duckrace-embed.html');
-      logger.info(`Serving duck race game from: ${filePath}`);
-      res.sendFile(filePath);
-    });
-    
+
     this.app.get('/health', (_req, res) => {
       res.json({ status: 'ok' });
     });
@@ -92,12 +78,12 @@ export class EmbeddedAppServer {
         const channelId = channelMatch[1];
         const session = this.gameSessions.get(channelId);
         if (session) {
-          res.json({ game: session.game, gameData: session.gameData || null });
+          res.json({ game: session.game });
           return;
         }
       }
       
-      res.json({ game: null, gameData: null });
+      res.json({ game: null });
     });
 
     // Config endpoint

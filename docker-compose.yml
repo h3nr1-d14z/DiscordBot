@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     ports:
       - "8736:8736"   # health check server
-      - "3000:3000"   # embedded app server (Discord Activities) — tunnel targets this
+      - "3000:3000"   # embedded app server (Discord Activities) — host cloudflared targets this
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -18,19 +18,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # Optional Cloudflare tunnel — start with: docker compose --profile tunnel up -d
-  # Requires TUNNEL_TOKEN=<token> in .env (Cloudflare Zero Trust dashboard)
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: discord-bot-tunnel
-    restart: unless-stopped
-    profiles: ["tunnel"]
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    depends_on:
-      - bot
 
 networks:
   default:
